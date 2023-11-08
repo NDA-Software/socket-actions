@@ -1,0 +1,42 @@
+{
+    "extends": [
+        "standard-with-typescript"
+    ],
+    "overrides": [
+        {
+            "files": [
+                "*.js",
+                "*.jsx",
+                "*.ts",
+                "*.tsx",
+                "*.d.ts",
+                "*.mjs",
+                "*.cjs"
+            ]
+        }
+    ],
+    "parserOptions": {
+        "project": "./tsconfig.json"
+    },
+    "rules": {
+        "@typescript-eslint/semi": "off",
+        "semi": [
+            "error",
+            "always"
+        ],
+        "@typescript-eslint/indent": [
+            "error",
+            4
+        ],
+        "@typescript-eslint/space-before-function-paren": "off",
+        "@typescript-eslint/no-var-requires": "off",
+        "curly": "off",
+        "@typescript-eslint/member-delimiter-style": "off",
+        "prefer-template": "error",
+        "nonblock-statement-body-position": [
+            "error",
+            "below"
+        ],
+        "@typescript-eslint/no-dynamic-delete": "off"
+    }
+}
