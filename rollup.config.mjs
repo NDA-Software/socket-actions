@@ -10,6 +10,7 @@ import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import copy from 'rollup-plugin-copy';
 import del from 'rollup-plugin-delete';
 import indexer from 'rollup-plugin-indexer';
+import { dts } from 'rollup-plugin-dts';
 
 const packageJson = JSON.parse(readFileSync('./package.json'));
 const tsConfig = JSON.parse(readFileSync('./tsconfig.json'));
@@ -164,6 +165,33 @@ if (hasEsm) {
 }
 // #endregion
 
+config.push({
+    input: 'dist/types/index.d.ts',
+    output: [{
+        file: 'dist/types/index.d.ts',
+        format: 'es'
+    }],
+    plugins: [dts()]
+});
+
+config.push({
+    input: 'dist/types/server/index.d.ts',
+    output: [{
+        file: 'dist/types/server.d.ts',
+        format: 'es'
+    }],
+    plugins: [dts()]
+});
+
+config.push({
+    input: 'dist/types/helpers/index.d.ts',
+    output: [{
+        file: 'dist/types/helpers.d.ts',
+        format: 'es'
+    }],
+    plugins: [dts()]
+});
+
 // #region Organizing Types:
 if (hasTypes) {
     config.push({
@@ -181,7 +209,7 @@ if (hasTypes) {
         ...mockConfig,
         plugins: [
             del({
-                targets: ['dist/types/src', 'dist/types/tests'],
+                targets: ['dist/types/src', 'dist/types/tests', 'dist/types/helpers/', 'dist/types/server'],
                 recursive: true
             })
         ]
