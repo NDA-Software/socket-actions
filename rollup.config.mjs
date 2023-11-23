@@ -165,33 +165,6 @@ if (hasEsm) {
 }
 // #endregion
 
-config.push({
-    input: 'dist/types/index.d.ts',
-    output: [{
-        file: 'dist/types/index.d.ts',
-        format: 'es'
-    }],
-    plugins: [dts()]
-});
-
-config.push({
-    input: 'dist/types/server/index.d.ts',
-    output: [{
-        file: 'dist/types/server.d.ts',
-        format: 'es'
-    }],
-    plugins: [dts()]
-});
-
-config.push({
-    input: 'dist/types/helpers/index.d.ts',
-    output: [{
-        file: 'dist/types/helpers.d.ts',
-        format: 'es'
-    }],
-    plugins: [dts()]
-});
-
 // #region Organizing Types:
 if (hasTypes) {
     config.push({
@@ -203,6 +176,36 @@ if (hasTypes) {
                 ]
             })
         ]
+    });
+
+    config.push({
+        input: 'dist/types/index.d.ts',
+        output: [{
+            file: 'dist/types/index.d.ts',
+            format: 'es'
+        }],
+        plugins: [dts()],
+        external: ['ws', 'express', 'http']
+    });
+
+    config.push({
+        input: 'dist/types/server/index.d.ts',
+        output: [{
+            file: 'dist/types/server.d.ts',
+            format: 'es'
+        }],
+        plugins: [dts()],
+        external: ['ws', 'express', 'http']
+    });
+
+    config.push({
+        input: 'dist/types/helpers/index.d.ts',
+        output: [{
+            file: 'dist/types/helpers.d.ts',
+            format: 'es'
+        }],
+        plugins: [dts()],
+        external: ['ws', 'express', 'http']
     });
 
     config.push({
