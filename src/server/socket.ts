@@ -60,8 +60,11 @@ const onPrepareDataEmptyFunction = async (socket: WebSocket, data: DataType): Pr
 
 const emptyPromiseFunction = async (): Promise<void> => {};
 
-const listenerFactory = (ctx: ws.Server, callback: EmptyPromise): EmptyFunction => {
+const listenerFactory = (ctx: ws.Server, socket: WebSocket | null, callback: EmptyPromise): EmptyFunction => {
     return (...args: any[]) => {
+        if (socket !== null)
+            args = [socket, ...args];
+
         void callback.apply(ctx, args);
     };
 };
@@ -113,9 +116,19 @@ export default class Socket extends ws.Server {
         this.Actions = {};
 
         for (const file of actionFiles) {
-            const Action = require(process.cwd() + file.replace('./', '/'));
+            const fullFilePath = process.cwd() + file.replace('./', '/');
 
-            this.Actions[file] = new Action();
+            const Action = require(fullFilePath);
+
+            let fileName = file
+                .replace(actionsPath, '')
+                .replace('.ts', '')
+                .replace('.js', '');
+
+            if (fileName[0] === '/')
+                fileName = fileName.substring(1);
+
+            this.Actions[fileName] = new Action();
         }
 
         this.server = serverOptions.server;
@@ -129,7 +142,7 @@ export default class Socket extends ws.Server {
         this.onPrepareData = onPrepareData ?? onPrepareDataEmptyFunction;
 
         this.prepareAllActions().then(() => {
-            this.on('connection', listenerFactory(this, this.connecting));
+            this.on('connection', listenerFactory(this, null, this.connecting));
 
             console.log(`SocketActions listening at ${url.replace('http', 'ws')}:${port}`);
         }).catch((err) => {
@@ -153,11 +166,11 @@ export default class Socket extends ws.Server {
         try {
             await this.onConnection(socket, req);
 
-            socket.on('error', listenerFactory(this, this.reportingError));
+            socket.on('error', listenerFactory(this, socket, this.reportingError));
 
-            socket.on('message', listenerFactory(this, this.authenticating));
+            socket.on('message', listenerFactory(this, socket, this.authenticating));
 
-            socket.on('close', listenerFactory(this, this.closing));
+            socket.on('close', listenerFactory(this, socket, this.closing));
         } catch (err) {
             console.error(err);
 
@@ -166,11 +179,17 @@ export default class Socket extends ws.Server {
     }
 
     private async authenticating (socket: WebSocket, message: string): Promise<void> {
-        await this.onAuth(socket, message);
+        try {
+            await this.onAuth(socket, message);
+        } catch (err) {
+            await this.onError(socket, err as Error);
+
+            return;
+        }
 
         socket.removeAllListeners('message');
 
-        socket.on('message', listenerFactory(this, this.receivingMessage));
+        socket.on('message', listenerFactory(this, socket, this.receivingMessage));
     }
 
     private async receivingMessage (socket: WebSocket, message: string): Promise<void> {
