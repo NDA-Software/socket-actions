@@ -22,7 +22,7 @@
         "watch": "rollup -c -w",
         "lint": "eslint src --ext .ts,.tsx",
         "lint-fix": "eslint src --ext .ts,.tsx --fix",
-        "test": "jest"
+        "test": "jest --detectOpenHandles"
     },
     "files": [
         "dist"
