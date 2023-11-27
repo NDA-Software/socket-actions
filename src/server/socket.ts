@@ -25,7 +25,7 @@ export type onConnection = (socket: WebSocket, req: IncomingMessage) => Promise<
 export type onAuth = (socket: WebSocket, message: string) => Promise<void>;
 export type onMessage = (socket: WebSocket, messageObject: messageObject) => Promise<messageObject>;
 
-export type onClose = (socket: WebSocket, code: number, reason: Buffer) => Promise<void>;
+export type onClose = (socket: WebSocket) => Promise<void>;
 export type onError = (socket: WebSocket, err: Error) => Promise<void>;
 
 export type onPrepareData = (socket: WebSocket, data: DataType) => Promise<ActionParameters>;
@@ -238,8 +238,8 @@ export default class Socket extends ws.Server {
         await this.onError(socket, err);
     }
 
-    private async closing (socket: WebSocket, code: number, reason: Buffer): Promise<void> {
-        await this.onClose(socket, code, reason);
+    private async closing (socket: WebSocket): Promise<void> {
+        await this.onClose(socket);
     }
 
     public override close(cb?: ((err?: Error | undefined) => void) | undefined): void {
