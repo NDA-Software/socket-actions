@@ -7,6 +7,8 @@ import Socket, {
 let socketServer: Socket | null = null;
 let connectionCounter = 0;
 
+const connect = (): WebSocket => new WebSocket('ws://localhost:3000');
+
 const onConnection = async (): Promise<void> => {
     connectionCounter++;
 };
@@ -18,6 +20,10 @@ const onAuth: onAuthType = async (socket, message) => {
     socket.send('Authenticated!');
 };
 
+const onClose = async (): Promise<void> => {
+    connectionCounter--;
+};
+
 const onError: onErrorType = async (socket, err) => {
     socket.send(err.message);
 };
@@ -27,13 +33,14 @@ beforeAll(() => {
         actionsPath: './mockActions',
         onConnection,
         onAuth,
+        onClose,
         onError
     });
 });
 
 describe('Socket:', () => {
     test('Testing onConnection...', (done) => {
-        const con = new WebSocket('ws://localhost:3000');
+        const con = connect();
 
         con.onopen = () => {
             expect(connectionCounter).toBe(1);
@@ -45,7 +52,7 @@ describe('Socket:', () => {
     });
 
     test('Testing onAuth...', (done) => {
-        const con = new WebSocket('ws://localhost:3000');
+        const con = connect();
 
         con.onopen = () => {
             con.send('notTrusted');
@@ -91,7 +98,7 @@ describe('Socket:', () => {
     });
 
     test('Testing onError...', (done) => {
-        const con = new WebSocket('ws://localhost:3000');
+        const con = connect();
 
         con.onopen = () => {
             con.send('trustMe!');
@@ -109,12 +116,22 @@ describe('Socket:', () => {
                 return;
             }
 
-            expect(message.data).toBe('You were defeated.');
-
             con.close();
+
+            expect(message.data).toBe('You were defeated.');
 
             done();
         };
+    });
+
+    test('Testing onClose...', (done) => {
+        // This required a timeout since onClose is async and therefore will not be waited when socket is closed.
+
+        setTimeout(() => {
+            expect(connectionCounter).toBe(0);
+
+            done();
+        }, 20);
     });
 });
 
