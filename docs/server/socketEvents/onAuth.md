@@ -4,7 +4,7 @@
 
 This event is executed on the first message to prevent execution of actions before proper authentication. If this event throws an exception, the next client message will also be parsed by this event instead of calling an action in itself.
 
-## Constructor
+## Parameters
 
 - socket: The user-identifying open socket.
 - message: Message sent from the client with data expected to be used for authentication.

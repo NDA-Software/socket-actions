@@ -4,7 +4,7 @@
 
 This event is executed when connection from client is stablished.
 
-## Constructor
+## Parameters
 
 - socket: The user-identifying open socket.
 - req: Data from the socket opening request.
