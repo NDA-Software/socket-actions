@@ -1,11 +1,11 @@
 /* AUTO-GENERATED, DO NOT EDIT MANUALLY */
-import parseCookies, * as parseCookiesNamed from './parseCookies';
+import ParseCookies, * as ParseCookiesNamed from './parseCookies';
 
-export { parseCookies };
+export { ParseCookies };
 
 export * from './parseCookies';
 
 export default {
-    parseCookies,
-    ...parseCookiesNamed
+    ParseCookies,
+    ...ParseCookiesNamed
 };

@@ -90,7 +90,7 @@ const preserveModules = (Object.keys(exports)).length > 1;
 const configCjs = {
     output: [{}],
     plugins: [
-        indexer('src', { recursive: true })
+        indexer('src', { recursive: true, nameCasing: 'PascalCase' })
     ]
 };
 

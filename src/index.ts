@@ -1,16 +1,16 @@
 /* AUTO-GENERATED, DO NOT EDIT MANUALLY */
-import helpers, * as helpersNamed from './helpers';
-import server, * as serverNamed from './server';
+import Helpers, * as HelpersNamed from './helpers';
+import Server, * as ServerNamed from './server';
 
-export { helpers };
-export { server };
+export { Helpers };
+export { Server };
 
 export * from './helpers';
 export * from './server';
 
 export default {
-    helpers,
-    server,
-    ...helpersNamed,
-    ...serverNamed
+    Helpers,
+    Server,
+    ...HelpersNamed,
+    ...ServerNamed
 };

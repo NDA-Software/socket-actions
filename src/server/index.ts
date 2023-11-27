@@ -1,16 +1,16 @@
 /* AUTO-GENERATED, DO NOT EDIT MANUALLY */
-import action, * as actionNamed from './action';
-import socket, * as socketNamed from './socket';
+import Action, * as ActionNamed from './action';
+import Socket, * as SocketNamed from './socket';
 
-export { action };
-export { socket };
+export { Action };
+export { Socket };
 
 export * from './action';
 export * from './socket';
 
 export default {
-    action,
-    socket,
-    ...actionNamed,
-    ...socketNamed
+    Action,
+    Socket,
+    ...ActionNamed,
+    ...SocketNamed
 };
