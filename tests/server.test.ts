@@ -2,10 +2,14 @@ import WebSocket from 'ws';
 import Socket from '../src/server/socket';
 
 let socketServer: Socket | null = null;
+let connectionCounter = 0;
 
 beforeAll(() => {
     socketServer = new Socket({
         actionsPath: './mockActions',
+        onConnection: async () => {
+            connectionCounter++;
+        },
         onAuth: async (socket, message) => {
             if (message.toString() !== 'trustMe!')
                 throw new Error('Access Denied!');
@@ -18,72 +22,64 @@ beforeAll(() => {
     });
 });
 
-test('Testing server\'s connection opening...', (done) => {
-    const con = new WebSocket('ws://localhost:3000');
+describe('Socket:', () => {
+    test('Testing onConnection...', (done) => {
+        const con = new WebSocket('ws://localhost:3000');
 
-    con.onopen = () => {
-        con.close();
+        con.onopen = () => {
+            expect(connectionCounter).toBe(1);
 
-        done();
-    };
-});
+            con.close();
 
-test('Testing authentication failure and failure of action due to lack of authentication...', (done) => {
-    const con = new WebSocket('ws://localhost:3000');
+            done();
+        };
+    });
 
-    con.onopen = () => {
-        con.send('notTrusted');
-    };
+    test('Testing onAuth...', (done) => {
+        const con = new WebSocket('ws://localhost:3000');
 
-    let firstMessage = true;
-    con.onmessage = (message) => {
-        expect(message.data).toBe('Access Denied!');
+        con.onopen = () => {
+            con.send('notTrusted');
+        };
 
-        if (firstMessage) {
-            firstMessage = false;
+        let messageCounter: number = 0;
+        con.onmessage = (message) => {
+            switch (messageCounter) {
+                case 0: // Expected failure of authentication.
+                    expect(message.data).toBe('Access Denied!');
 
-            con.send(JSON.stringify({
-                path: 'hello',
-                data: { name: 'World' }
-            }));
+                    con.send(JSON.stringify({
+                        path: 'hello',
+                        data: { name: 'World' }
+                    }));
+                    break;
 
-            return;
-        }
+                case 1: // Expected failure of action due to lack of previous authentication.
+                    expect(message.data).toBe('Access Denied!');
 
-        con.close();
+                    con.send('trustMe!');
+                    break;
 
-        done();
-    };
-});
+                case 2: // Expect authentication success.
+                    expect(message.data).toBe('Authenticated!');
 
-test('Testing successful authentication and action execution...', (done) => {
-    const con = new WebSocket('ws://localhost:3000');
+                    con.send(JSON.stringify({
+                        path: 'hello',
+                        data: { name: 'World' }
+                    }));
+                    break;
 
-    con.onopen = () => {
-        con.send('trustMe!');
-    };
+                case 3: // Expect action to be executed.
+                    expect(message.data).toBe('Hello World!');
 
-    let firstMessage = true;
-    con.onmessage = (message) => {
-        if (firstMessage) {
-            expect(message.data).toBe('Authenticated!');
+                    con.close();
+                    done();
+                    break;
+            }
 
-            firstMessage = false;
-
-            con.send(JSON.stringify({
-                path: 'hello',
-                data: { name: 'World' }
-            }));
-
-            return;
-        }
-
-        expect(message.data).toBe('Hello World!');
-
-        con.close();
-
-        done();
-    };
+            messageCounter++;
+        };
+    });
 });
 
 afterAll(() => {
