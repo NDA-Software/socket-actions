@@ -1,7 +1,8 @@
 import WebSocket from 'ws';
 import Socket, {
     type onAuth as onAuthType,
-    type onError as onErrorType
+    type onError as onErrorType,
+    type onMessage as onMessageType
 } from '../src/server/socket';
 
 let socketServer: Socket | null = null;
@@ -20,6 +21,17 @@ const onAuth: onAuthType = async (socket, message) => {
     socket.send('Authenticated!');
 };
 
+let firstHit = true;
+const onMessage: onMessageType = async (_socket, messageObject) => {
+    if (messageObject.path === 'hitMonster' && firstHit) {
+        messageObject.path = 'failToHitMonster';
+
+        firstHit = false;
+    }
+
+    return messageObject;
+};
+
 const onClose = async (): Promise<void> => {
     connectionCounter--;
 };
@@ -33,6 +45,7 @@ beforeAll(() => {
         actionsPath: './mockActions',
         onConnection,
         onAuth,
+        onMessage,
         onClose,
         onError
     });
@@ -87,6 +100,38 @@ describe('Socket:', () => {
 
                 case 3: // Expect action to be executed.
                     expect(message.data).toBe('Hello World!');
+
+                    con.close();
+                    done();
+                    break;
+            }
+
+            messageCounter++;
+        };
+    });
+
+    test('Testing onMessage...', (done) => {
+        const con = connect();
+
+        con.onopen = () => {
+            con.send('trustMe!');
+        };
+
+        let messageCounter: number = 0;
+        con.onmessage = (message) => {
+            switch (messageCounter) {
+                case 0:
+                    con.send(JSON.stringify({ path: 'hitMonster' }));
+                    break;
+
+                case 1: // Expect for attack to have failed.
+                    expect(message.data).toBe('You missed! Please wait for the bald guy\'s help.');
+
+                    con.send(JSON.stringify({ path: 'hitMonster' }));
+                    break;
+
+                case 2: // Expect action to be executed.
+                    expect(message.data).toBe('ONE PUNCH!');
 
                     con.close();
                     done();
