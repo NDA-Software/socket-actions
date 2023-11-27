@@ -24,7 +24,7 @@ These options are added to the constructor together with the options object abov
 - [onAuth](/docs/server/socketEvents/onAuth.md): Executed on the first message to prevent execution of actions before proper authentication.
 - [onClose](/docs/server/socketEvents/onClose.md): Executed when client closes connection.
 - [onError](/docs/server/socketEvents/onError.md): Executed when an unthreated exception is thrown inside any action or event.
-- onMessage: Executed on all message events after proper authentication (or disable of authentication) and before onPrepareData, this is expected to be used if any threatment to the exact data sent from the user is needed.
+- [onMessage](/docs/server/socketEvents/onMessage.md): Executed on all message events after proper authentication (or disable of authentication) and before onPrepareData, this is expected to be used if any threatment to the exact data sent from the user is needed.
 - onPrepareData: Executed after the onMessage event and before the action in itself. Expected to be used to make modifications to the parameters sent to the action, possibly adding user-specific information to it.
 
 ### Public Attributes
