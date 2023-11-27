@@ -1,6 +1,8 @@
 import ws, { type ServerOptions, type WebSocket } from 'ws';
 import express from 'express';
 import { type IncomingMessage, type Server } from 'http';
+import bodyParser from 'body-parser';
+import cors from 'cors';
 
 import { executeOnFiles } from 'ts-cornucopia/file';
 import type Action from './action';
@@ -114,6 +116,13 @@ export default class Socket extends ws.Server {
 
         if (server === undefined) {
             const app = express();
+
+            app.use(bodyParser.json());
+
+            app.use(cors({
+                origin: url,
+                optionsSuccessStatus: 200
+            }));
 
             serverOptions.server = app.listen(port, () => {
                 console.log(`Express listening at ${url}:${port}`);

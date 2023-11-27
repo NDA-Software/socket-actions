@@ -186,7 +186,7 @@ if (hasTypes) {
             format: 'es'
         }],
         plugins: [dts()],
-        external: ['ws', 'express', 'http']
+        external: ['http']
     });
 
     config.push({
@@ -196,7 +196,7 @@ if (hasTypes) {
             format: 'es'
         }],
         plugins: [dts()],
-        external: ['ws', 'express', 'http']
+        external: ['http']
     });
 
     config.push({
@@ -205,8 +205,7 @@ if (hasTypes) {
             file: 'dist/types/helpers.d.ts',
             format: 'es'
         }],
-        plugins: [dts()],
-        external: ['ws', 'express', 'http']
+        plugins: [dts()]
     });
 
     config.push({
