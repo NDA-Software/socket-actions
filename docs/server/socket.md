@@ -21,7 +21,7 @@ This class extends WebSocket.Server and adds wrappers to some of the relevant We
 These options are added to the constructor together with the options object above and all have their own documentation file with more details:
 
 - [onConnection](/docs/server/socketEvents/onConnection.md): Executed when connection from client is stablished.
-- onAuth: Executed on the first message to prevent execution of actions before proper authentication.
+- [onAuth](/docs/server/socketEvents/onAuth.md): Executed on the first message to prevent execution of actions before proper authentication.
 - onClose: Executed when client closes connection.
 - onError: Executed when an exception is thrown inside any action or event.
 - onMessage: Executed on all message events after proper authentication (or disable of authentication) and before onPrepareData, this is expected to be used if any threatment to the exact data sent from the user is needed.
