@@ -1,24 +1,33 @@
 import WebSocket from 'ws';
-import Socket from '../src/server/socket';
+import Socket, {
+    type onAuth as onAuthType,
+    type onError as onErrorType
+} from '../src/server/socket';
 
 let socketServer: Socket | null = null;
 let connectionCounter = 0;
 
+const onConnection = async (): Promise<void> => {
+    connectionCounter++;
+};
+
+const onAuth: onAuthType = async (socket, message) => {
+    if (message.toString() !== 'trustMe!')
+        throw new Error('Access Denied!');
+
+    socket.send('Authenticated!');
+};
+
+const onError: onErrorType = async (socket, err) => {
+    socket.send(err.message);
+};
+
 beforeAll(() => {
     socketServer = new Socket({
         actionsPath: './mockActions',
-        onConnection: async () => {
-            connectionCounter++;
-        },
-        onAuth: async (socket, message) => {
-            if (message.toString() !== 'trustMe!')
-                throw new Error('Access Denied!');
-
-            socket.send('Authenticated!');
-        },
-        onError: async (socket, err) => {
-            socket.send(err.message);
-        }
+        onConnection,
+        onAuth,
+        onError
     });
 });
 
@@ -78,6 +87,33 @@ describe('Socket:', () => {
             }
 
             messageCounter++;
+        };
+    });
+
+    test('Testing onError...', (done) => {
+        const con = new WebSocket('ws://localhost:3000');
+
+        con.onopen = () => {
+            con.send('trustMe!');
+        };
+
+        let firstMessage = true;
+        con.onmessage = (message) => {
+            if (firstMessage) {
+                firstMessage = false;
+
+                con.send(JSON.stringify({
+                    path: 'mistake'
+                }));
+
+                return;
+            }
+
+            expect(message.data).toBe('You were defeated.');
+
+            con.close();
+
+            done();
         };
     });
 });
