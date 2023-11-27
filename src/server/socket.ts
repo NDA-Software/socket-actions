@@ -36,6 +36,7 @@ export type SocketOptions = {
     url?: string
     port?: number,
     actionsPath?: string,
+    disableAuthentication?: boolean,
     onConnection?: onConnection
     onAuth?: onAuth
     onClose?: onClose
@@ -47,7 +48,8 @@ export type SocketOptions = {
 const defaultOptions = {
     url: 'http://localhost',
     port: 3000,
-    actionsPath: './actions'
+    actionsPath: './actions',
+    disableAuthentication: false
 };
 
 const onMessageEmptyFunction = async (_: any, messageObject: messageObject): Promise<messageObject> => messageObject;
@@ -57,6 +59,10 @@ const onPrepareDataEmptyFunction = async (socket: WebSocket, data: DataType): Pr
     userData: {},
     socket
 });
+
+const authenticationNotImplemented = async (): Promise<void> => {
+    throw new Error('Authentication not implemented. Maybe you forgot to disable it.');
+};
 
 const emptyPromiseFunction = async (): Promise<void> => {};
 
@@ -81,11 +87,14 @@ export default class Socket extends ws.Server {
 
     private readonly Actions: Record<string, Action>;
 
-    constructor(options: SocketOptions, callback?: () => void) {
+    private readonly disableAuthentication: boolean;
+
+    constructor(options: SocketOptions) {
         const {
             url,
             port,
             actionsPath,
+            disableAuthentication,
             onConnection,
             onAuth,
             onClose,
@@ -111,7 +120,7 @@ export default class Socket extends ws.Server {
             });
         }
 
-        super(serverOptions, callback);
+        super(serverOptions);
 
         this.Actions = {};
 
@@ -134,7 +143,7 @@ export default class Socket extends ws.Server {
         this.server = serverOptions.server;
 
         this.onConnection = onConnection ?? emptyPromiseFunction;
-        this.onAuth = onAuth ?? emptyPromiseFunction;
+        this.onAuth = onAuth ?? authenticationNotImplemented;
         this.onClose = onClose ?? emptyPromiseFunction;
         this.onError = onError ?? emptyPromiseFunction;
 
@@ -148,6 +157,11 @@ export default class Socket extends ws.Server {
         }).catch((err) => {
             throw new Error(err);
         });
+
+        this.disableAuthentication = disableAuthentication;
+
+        if (disableAuthentication && onAuth !== undefined)
+            console.warn('onAuth event both added and supressed by disableAuthentication option.');
     }
 
     private async prepareAllActions (): Promise<void> {
@@ -168,7 +182,10 @@ export default class Socket extends ws.Server {
 
             socket.on('error', listenerFactory(this, socket, this.reportingError));
 
-            socket.on('message', listenerFactory(this, socket, this.authenticating));
+            if (this.disableAuthentication)
+                socket.on('message', listenerFactory(this, socket, this.receivingMessage));
+            else
+                socket.on('message', listenerFactory(this, socket, this.authenticating));
 
             socket.on('close', listenerFactory(this, socket, this.closing));
         } catch (err) {
@@ -182,7 +199,7 @@ export default class Socket extends ws.Server {
         try {
             await this.onAuth(socket, message);
         } catch (err) {
-            await this.onError(socket, err as Error);
+            await this.reportingError(socket, err as Error);
 
             return;
         }
@@ -204,7 +221,7 @@ export default class Socket extends ws.Server {
 
             await this.Actions[path]?.run(parameters);
         } catch (err) {
-            console.error(err);
+            await this.reportingError(socket, err as Error);
         }
     }
 

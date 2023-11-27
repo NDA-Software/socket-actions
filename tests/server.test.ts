@@ -12,8 +12,8 @@ beforeAll(() => {
 
             socket.send('Authenticated!');
         },
-        onError: async (socket) => {
-            socket.send('Failed!');
+        onError: async (socket, err) => {
+            socket.send(err.message);
         }
     });
 });
@@ -37,7 +37,7 @@ test('Testing authentication failure and failure of action due to lack of authen
 
     let firstMessage = true;
     con.onmessage = (message) => {
-        expect(message.data).toBe('Failed!');
+        expect(message.data).toBe('Access Denied!');
 
         if (firstMessage) {
             firstMessage = false;
