@@ -1,4 +1,4 @@
-# onMessage (socket: WebSocket, messageObject: messageObject): Promise\<messageObject>
+# onMessage (socket: WebSocket, messageObject: MessageObject): Promise\<MessageObject>
 
 ## Description
 
@@ -16,7 +16,7 @@ This event is executed on all message events after proper authentication (or dis
 
 ## Return
 
-- This event must always return a messageObject, and this object is the one that will be used to define which action to execute and with which parameters.
+- This event must always return a MessageObject, and this object is the one that will be used to define which action to execute and with which parameters.
 
 ## Usage:
 

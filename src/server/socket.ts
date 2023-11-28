@@ -9,7 +9,7 @@ import type Action from './action';
 
 export type DataType = Record<string, any>;
 
-export type messageObject = {
+export type MessageObject = {
     path: string,
     data: DataType
 };
@@ -23,7 +23,7 @@ export type ActionParameters = {
 export type onConnection = (socket: WebSocket, req: IncomingMessage) => Promise<void>;
 
 export type onAuth = (socket: WebSocket, message: string) => Promise<void>;
-export type onMessage = (socket: WebSocket, messageObject: messageObject) => Promise<messageObject>;
+export type onMessage = (socket: WebSocket, messageObject: MessageObject) => Promise<MessageObject>;
 
 export type onClose = (socket: WebSocket) => Promise<void>;
 export type onError = (socket: WebSocket, err: Error) => Promise<void>;
@@ -54,7 +54,7 @@ const defaultOptions = {
     disableAuthentication: false
 };
 
-const onMessageEmptyFunction = async (_: any, messageObject: messageObject): Promise<messageObject> => messageObject;
+const onMessageEmptyFunction = async (_: any, messageObject: MessageObject): Promise<MessageObject> => messageObject;
 
 const onPrepareDataEmptyFunction = async (socket: WebSocket, data: DataType): Promise<ActionParameters> => ({
     data,
@@ -220,7 +220,7 @@ export default class Socket extends ws.Server {
 
     private async receivingMessage (socket: WebSocket, message: string): Promise<void> {
         try {
-            let messageObject = JSON.parse(message) as messageObject;
+            let messageObject = JSON.parse(message) as MessageObject;
 
             messageObject = await this.onMessage(socket, messageObject);
 
