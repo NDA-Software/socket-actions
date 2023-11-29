@@ -2,9 +2,10 @@ import WebSocket from 'ws';
 import Socket, {
     type onAuth as onAuthType,
     type onError as onErrorType,
-    type onMessage as onMessageType,
-    type onPrepareData as onPrepareDataType
+    type onMessage as onMessageType
 } from '../src/server/socket';
+
+import { validate as uuidValidate } from 'uuid';
 
 let socketServer: Socket | null = null;
 let connectionCounter = 0;
@@ -33,21 +34,6 @@ const onMessage: onMessageType = async (_socket, messageObject) => {
     return messageObject;
 };
 
-let userCount = 0;
-const onPrepareData: onPrepareDataType = async (socket, data) => {
-    userCount++;
-
-    const userData = {
-        id: userCount
-    };
-
-    return {
-        socket,
-        userData,
-        data
-    };
-};
-
 const onClose = async (): Promise<void> => {
     connectionCounter--;
 };
@@ -62,7 +48,6 @@ beforeAll(() => {
         onConnection,
         onAuth,
         onMessage,
-        onPrepareData,
         onClose,
         onError
     });
@@ -118,6 +103,16 @@ describe('Socket:', () => {
                 case 3: // Expect action to be executed.
                     expect(message.data).toBe('Hello World!');
 
+                    con.send(JSON.stringify({
+                        path: 'getId'
+                    }));
+                    break;
+
+                case 4:
+                    expect(
+                        uuidValidate(message.data as string)
+                    ).toBe(true);
+
                     con.close();
                     done();
                     break;
@@ -151,33 +146,6 @@ describe('Socket:', () => {
                     expect(message.data).toBe('ONE PUNCH!');
 
                     con.close();
-                    done();
-                    break;
-            }
-
-            messageCounter++;
-        };
-    });
-
-    test('Testing onPrepareData...', (done) => {
-        const con = connect();
-
-        con.onopen = () => {
-            con.send('trustMe!');
-        };
-
-        let messageCounter: number = 0;
-        con.onmessage = (message) => {
-            switch (messageCounter) {
-                case 0:
-                    con.send(JSON.stringify({ path: 'testUserData' }));
-                    break;
-
-                case 1:
-                    expect(message.data).toBe('User Id: 4');
-
-                    con.close();
-
                     done();
                     break;
             }
