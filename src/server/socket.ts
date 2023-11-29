@@ -3,6 +3,7 @@ import express from 'express';
 import { type IncomingMessage, type Server } from 'http';
 import bodyParser from 'body-parser';
 import cors from 'cors';
+import { v4 as uuid } from 'uuid';
 
 import { executeOnFiles } from 'ts-cornucopia/file';
 import type Action from './action';
@@ -16,19 +17,21 @@ export type MessageObject = {
 
 export type ActionParameters = {
     data: DataType,
-    userData: Record<string, any>,
-    socket: WebSocket
+    userData: DataType,
+    socket: ClientSocket
 }
 
-export type onConnection = (socket: WebSocket, req: IncomingMessage) => Promise<void>;
+export type ClientSocket = WebSocket & {
+    userData: DataType
+};
 
-export type onAuth = (socket: WebSocket, message: string) => Promise<void>;
-export type onMessage = (socket: WebSocket, messageObject: MessageObject) => Promise<MessageObject>;
+export type onConnection = (socket: ClientSocket, req: IncomingMessage) => Promise<void>;
 
-export type onClose = (socket: WebSocket) => Promise<void>;
-export type onError = (socket: WebSocket, err: Error) => Promise<void>;
+export type onAuth = (socket: ClientSocket, message: string) => Promise<void>;
+export type onMessage = (socket: ClientSocket, messageObject: MessageObject) => Promise<MessageObject>;
 
-export type onPrepareData = (socket: WebSocket, data: DataType) => Promise<ActionParameters>;
+export type onClose = (socket: ClientSocket) => Promise<void>;
+export type onError = (socket: ClientSocket, err: Error) => Promise<void>;
 
 type EmptyPromise = (...args: any[]) => Promise<void>;
 type EmptyFunction = (...args: any[]) => void;
@@ -44,7 +47,6 @@ export type SocketOptions = {
     onClose?: onClose
     onError?: onError
     onMessage?: onMessage
-    onPrepareData?: onPrepareData,
 }
 
 const defaultOptions = {
@@ -56,19 +58,13 @@ const defaultOptions = {
 
 const onMessageEmptyFunction = async (_: any, messageObject: MessageObject): Promise<MessageObject> => messageObject;
 
-const onPrepareDataEmptyFunction = async (socket: WebSocket, data: DataType): Promise<ActionParameters> => ({
-    data,
-    userData: {},
-    socket
-});
-
 const authenticationNotImplemented = async (): Promise<void> => {
     throw new Error('Authentication not implemented. Maybe you forgot to disable it.');
 };
 
 const emptyPromiseFunction = async (): Promise<void> => {};
 
-const listenerFactory = (ctx: ws.Server, socket: WebSocket | null, callback: EmptyPromise): EmptyFunction => {
+const listenerFactory = (ctx: ws.Server, socket: ClientSocket | null, callback: EmptyPromise): EmptyFunction => {
     return (...args: any[]) => {
         if (socket !== null)
             args = [socket, ...args];
@@ -85,7 +81,6 @@ export default class Socket extends ws.Server {
     private readonly onClose: onClose;
     private readonly onError: onError;
     private readonly onMessage: onMessage;
-    private readonly onPrepareData: onPrepareData;
 
     private readonly Actions: Record<string, Action>;
 
@@ -101,8 +96,7 @@ export default class Socket extends ws.Server {
             onAuth,
             onClose,
             onError,
-            onMessage,
-            onPrepareData
+            onMessage
         } = { ...defaultOptions, ...options };
 
         const actionFiles = executeOnFiles(actionsPath, (file) => file, { recursive: true });
@@ -157,7 +151,6 @@ export default class Socket extends ws.Server {
         this.onError = onError ?? emptyPromiseFunction;
 
         this.onMessage = onMessage ?? onMessageEmptyFunction;
-        this.onPrepareData = onPrepareData ?? onPrepareDataEmptyFunction;
 
         this.prepareAllActions().then(() => {
             this.on('connection', listenerFactory(this, null, this.connecting));
@@ -185,7 +178,7 @@ export default class Socket extends ws.Server {
         await Promise.all(promises);
     }
 
-    private async connecting (socket: WebSocket, req: IncomingMessage): Promise<void> {
+    private async connecting (socket: ClientSocket, req: IncomingMessage): Promise<void> {
         try {
             await this.onConnection(socket, req);
 
@@ -204,9 +197,15 @@ export default class Socket extends ws.Server {
         }
     }
 
-    private async authenticating (socket: WebSocket, message: string): Promise<void> {
+    private async authenticating (socket: ClientSocket, message: string): Promise<void> {
         try {
             await this.onAuth(socket, message);
+
+            if (socket.userData === undefined)
+                socket.userData = {};
+
+            if (socket.userData.id === undefined)
+                socket.userData.id = uuid();
         } catch (err) {
             await this.reportingError(socket, err as Error);
 
@@ -218,15 +217,19 @@ export default class Socket extends ws.Server {
         socket.on('message', listenerFactory(this, socket, this.receivingMessage));
     }
 
-    private async receivingMessage (socket: WebSocket, message: string): Promise<void> {
+    private async receivingMessage (socket: ClientSocket, message: string): Promise<void> {
         try {
-            let messageObject = JSON.parse(message) as MessageObject;
+            const messageObject = JSON.parse(message) as MessageObject;
 
-            messageObject = await this.onMessage(socket, messageObject);
+            await this.onMessage(socket, messageObject);
 
             const { path, data } = messageObject;
 
-            const parameters = await this.onPrepareData(socket, data);
+            const parameters = {
+                socket,
+                userData: socket.userData,
+                data
+            };
 
             await this.Actions[path]?.run(parameters);
         } catch (err) {
@@ -234,11 +237,11 @@ export default class Socket extends ws.Server {
         }
     }
 
-    private async reportingError (socket: WebSocket, err: Error): Promise<void> {
+    private async reportingError (socket: ClientSocket, err: Error): Promise<void> {
         await this.onError(socket, err);
     }
 
-    private async closing (socket: WebSocket): Promise<void> {
+    private async closing (socket: ClientSocket): Promise<void> {
         await this.onClose(socket);
     }
 
