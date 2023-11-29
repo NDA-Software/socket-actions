@@ -28,7 +28,7 @@ export type ClientSocket = WebSocket & {
 export type onConnection = (socket: ClientSocket, req: IncomingMessage) => Promise<void>;
 
 export type onAuth = (socket: ClientSocket, message: string) => Promise<void>;
-export type onMessage = (socket: ClientSocket, messageObject: MessageObject) => Promise<MessageObject>;
+export type onMessage = (socket: ClientSocket, messageObject: MessageObject) => Promise<void>;
 
 export type onClose = (socket: ClientSocket) => Promise<void>;
 export type onError = (socket: ClientSocket, err: Error) => Promise<void>;
@@ -55,8 +55,6 @@ const defaultOptions = {
     actionsPath: './actions',
     disableAuthentication: false
 };
-
-const onMessageEmptyFunction = async (_: any, messageObject: MessageObject): Promise<MessageObject> => messageObject;
 
 const authenticationNotImplemented = async (): Promise<void> => {
     throw new Error('Authentication not implemented. Maybe you forgot to disable it.');
@@ -149,8 +147,7 @@ export default class Socket extends ws.Server {
         this.onAuth = onAuth ?? authenticationNotImplemented;
         this.onClose = onClose ?? emptyPromiseFunction;
         this.onError = onError ?? emptyPromiseFunction;
-
-        this.onMessage = onMessage ?? onMessageEmptyFunction;
+        this.onMessage = onMessage ?? emptyPromiseFunction;
 
         this.prepareAllActions().then(() => {
             this.on('connection', listenerFactory(this, null, this.connecting));

@@ -30,8 +30,6 @@ const onMessage: onMessageType = async (_socket, messageObject) => {
 
         firstHit = false;
     }
-
-    return messageObject;
 };
 
 const onClose = async (): Promise<void> => {
