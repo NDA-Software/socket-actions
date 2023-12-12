@@ -1,22 +1,13 @@
-# onMessage (socket: WebSocket, messageObject: MessageObject): Promise\<MessageObject>
+# onMessage (socket: ClientSocket, messageObject: MessageObject): Promise\<void>
 
 ## Description
 
-This event is executed on all message events after proper authentication (or disable of authentication) and before onPrepareData, this is expected to be used if any threatment to the exact data sent from the user is needed.
+This event is executed on all message events after proper authentication (or disable of authentication) and before the execution of the action, this is expected to be used if any threatment to the exact data sent from the user is needed.
 
 ## Parameters
 
-- socket: The user-identifying open socket.
+- clientSocket: The user-identifying open socket.
 - messageObject: The message is parsed from JSON to object before entering this event.
-
-### MessageObject
-
-- path: string which defines the action to be executed after this function is concluded. This can be changed.
-- data: the information provided by the user to be passed to the action.
-
-## Return
-
-- This event must always return a MessageObject, and this object is the one that will be used to define which action to execute and with which parameters.
 
 ## Usage:
 
@@ -48,7 +39,7 @@ new Socket({
             }
         }
 
-        return { ...messageObject, path };
+        messageObject.path = path;
     }
 });
 

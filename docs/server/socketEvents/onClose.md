@@ -1,4 +1,4 @@
-# onClose (socket: WebSocket): Promise\<void>
+# onClose (socket: ClientSocket): Promise\<void>
 
 ## Description
 
@@ -6,7 +6,7 @@ This event is executed when client closes connection.
 
 ## Parameters
 
-- socket: The user-identifying open socket.
+- clientSocket: The user-identifying open socket.
 
 ## Usage:
 
@@ -25,5 +25,5 @@ new Socket({
     }
 });
 
-// In this example the server will log every time a socket disconnects.
+// In this example the server will count and log every time a user disconnects.
 ```

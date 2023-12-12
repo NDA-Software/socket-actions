@@ -1,4 +1,4 @@
-# onError (socket: WebSocket, req: IncomingMessage): Promise\<void>
+# onError (socket: ClientSocket, req: IncomingMessage): Promise\<void>
 
 ## Description
 
@@ -6,7 +6,7 @@ This event is executed when an unthreated exception is thrown inside any action 
 
 ## Parameters
 
-- socket: The user-identifying open socket.
+- clientSocket: The user-identifying open socket.
 - err: Error object.
 
 ## Usage:

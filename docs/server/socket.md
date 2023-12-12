@@ -18,14 +18,17 @@ This class extends WebSocket.Server and adds wrappers to some of the relevant We
 
 ## Event Options
 
+All event options receive a "socket" object of type ClientSocket that represents the current active connection to the user that triggered the event.
+
+The ClientSocket object is a child of the WebSocket object from the package ws with an added field called userData of type Record<string, any> that can be used to store any persistent user data and is expected to be initially filled during onAuth.
+
 These options are added to the constructor together with the options object above and all have their own documentation file with more details:
 
 - [onConnection](/docs/server/socketEvents/onConnection.md): Executed when connection from client is stablished.
 - [onAuth](/docs/server/socketEvents/onAuth.md): Executed on the first message to prevent execution of actions before proper authentication.
 - [onClose](/docs/server/socketEvents/onClose.md): Executed when client closes connection.
 - [onError](/docs/server/socketEvents/onError.md): Executed when an unthreated exception is thrown inside any action or event.
-- [onMessage](/docs/server/socketEvents/onMessage.md): Executed on all message events after proper authentication (or disable of authentication) and before onPrepareData, this is expected to be used if any threatment to the exact data sent from the user is needed.
-- [onPrepareData](/docs/server/socketEvents/onPrepareData.md): Executed after the onMessage event and before the action in itself. Expected to be used to make modifications to the parameters sent to the action, possibly adding user-specific information to it.
+- [onMessage](/docs/server/socketEvents/onMessage.md): Executed on all message events after proper authentication (or disable of authentication) and before the execution of the action, this is expected to be used if any threatment to the exact data sent from the user is needed.
 
 ### Public Attributes
 

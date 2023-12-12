@@ -1,4 +1,4 @@
-# onConnection (socket: WebSocket, req: IncomingMessage): Promise\<void>
+# onConnection (socket: ClientSocket, req: IncomingMessage): Promise\<void>
 
 ## Description
 
@@ -6,7 +6,7 @@ This event is executed when connection from client is stablished.
 
 ## Parameters
 
-- socket: The user-identifying open socket.
+- clientSocket: The user-identifying open socket.
 - req: Data from the socket opening request.
 
 ## Usage:

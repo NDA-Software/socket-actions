@@ -12,22 +12,20 @@ This is still a work in progress. The objective is to create an easy to use with
 
 - 0.3.0:
 
-  - Add id to onAuth to simplify execution of onPrepareData.
-  - Change onPrepareData to onIdentifyUser and remove option to change sockets and data to avoid mistakes, also removing the overlap between the current onPrepareData and onMessage.
-  - Update tests accordingly.
-  - Update documentation accordingly.
+  - Review usage and add both tests and documentation to action class.
 
 - 0.4.0:
 
-  - Review usage and add both tests and documentation to action class.
+  - Add option to import the Actions on your own and suplying them instead of giving the path to actions and the socket using require.
 
 - 0.5.0:
 
-  - Add option to import the Actions on your own and suplying them instead of giving the path to actions and the socket using require.
+  - Isolate common types in typing file.
+  - Document common types.
 
 - 1.0.0:
 
-  - Create client class to ease integration and avoid the need to use raw WebSocket to consume the server.
+  - Create client class to ease integration and avoid the need to use "ws" client to consume the server.
   - Add tests and documentation to client class.
   - Update previous tests to all use the client class instead of default WebSocket client.
   - Update this documentation with all missing informations.
@@ -47,3 +45,19 @@ This is still a work in progress. The objective is to create an easy to use with
   - Add the option for a single user to only be able to add a single action to the queue a time, with options to either default to ignore the new action or overwrite the old action.
   - Add relevant tests.
   - Add relevant documentations.
+
+- 1.3.0:
+
+  - Add caching options to avoid multiple similar connections in client object.
+  - Update tests.
+  - Update documentations.
+
+- Before next update:
+
+  - Create docker image to run this server with little to no configurations
+
+- 1.4.0:
+  - Create another parallel entrypoint to be used for local connections between other Docker Containers and similar infraestructures with separate credential style as default.
+  - Create ServerActions to be used in such entrypoint. Users should not have access to server actions and server-side clients should not have access to user's actions.
+  - Add tests to server-side connections.
+  - Add documentation to server-side connections.
