@@ -7,12 +7,9 @@ This is still a work in progress. The objective is to create an easy to use with
 ## Server Classes
 
 - [Socket](/docs/server/socket.md): The main class that is used to instantiate the server allowing connection through websocket protocols.
+- [Action](/docs/server/action.md): The class that should be extended by all actions to be called by the socket instance.
 
 ## Roadmap:
-
-- 0.3.0:
-
-  - Review usage and add both tests and documentation to action class.
 
 - 0.4.0:
 
