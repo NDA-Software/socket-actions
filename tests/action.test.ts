@@ -8,7 +8,7 @@ const actions = {
     shootLightning: new ShootLightning()
 };
 
-const connect = (): WebSocket => new WebSocket('ws://localhost:3001');
+const connect = (): WebSocket => new WebSocket('ws://localhost:3002');
 
 let socketServer: Socket | null = null;
 
@@ -26,7 +26,7 @@ const onAuth: onAuthType = async (socket) => {
 beforeAll(() => {
     socketServer = new Socket({
         actions,
-        port: 3001,
+        port: 3002,
         onAuth
     });
 });

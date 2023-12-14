@@ -25,7 +25,9 @@ const actions: Record<string, Action> = {
     testUserData: new TestUserData()
 };
 
+let unsafeSocket: Socket | null = null;
 let socketServer: Socket | null = null;
+
 let connectionCounter = 0;
 
 const connect = (): WebSocket => new WebSocket('ws://localhost:3000');
@@ -66,6 +68,12 @@ beforeAll(() => {
         onMessage,
         onClose,
         onError
+    });
+
+    unsafeSocket = new Socket({
+        actionsPath: './mockActions/pathTest',
+        disableAuthentication: true,
+        port: 3001
     });
 });
 
@@ -206,8 +214,29 @@ describe('Socket:', () => {
             done();
         }, 20);
     });
+
+    test('Testing unsafe socket and actionsPath...', (done) => {
+        const con = new WebSocket('ws://localhost:3001');
+
+        con.onopen = () => {
+            con.send(JSON.stringify({
+                path: 'hello'
+
+            }));
+        };
+
+        con.onmessage = (message) => {
+            expect(message.data).toBe('Hello from module.exports!');
+
+            con.close();
+
+            done();
+        };
+    });
 });
 
 afterAll(() => {
     socketServer?.close();
+
+    unsafeSocket?.close();
 });
