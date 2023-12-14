@@ -41,6 +41,7 @@ export type SocketOptions = {
     url?: string
     port?: number,
     actionsPath?: string,
+    actions?: Record<string, Action>,
     disableAuthentication?: boolean,
     onConnection?: onConnection
     onAuth?: onAuth
@@ -89,6 +90,7 @@ export default class Socket extends ws.Server {
             url,
             port,
             actionsPath,
+            actions,
             disableAuthentication,
             onConnection,
             onAuth,
@@ -96,8 +98,6 @@ export default class Socket extends ws.Server {
             onError,
             onMessage
         } = { ...defaultOptions, ...options };
-
-        const actionFiles = executeOnFiles(actionsPath, (file) => file, { recursive: true });
 
         let { serverOptions } = options;
 
@@ -123,22 +123,29 @@ export default class Socket extends ws.Server {
 
         super(serverOptions);
 
-        this.Actions = {};
+        this.Actions = actions ?? {};
 
-        for (const file of actionFiles) {
-            const fullFilePath = process.cwd() + file.replace('./', '/');
+        if (actions !== undefined && actionsPath !== undefined && actionsPath !== './actions')
+            console.warn('Actions and ActionPath supplied in the configuration, actionPath ignored.');
 
-            const Action = require(fullFilePath);
+        if (actions === undefined) {
+            const actionFiles = executeOnFiles(actionsPath, (file) => file, { recursive: true });
 
-            let fileName = file
-                .replace(actionsPath, '')
-                .replace('.ts', '')
-                .replace('.js', '');
+            for (const file of actionFiles) {
+                const fullFilePath = process.cwd() + file.replace('./', '/');
 
-            if (fileName[0] === '/')
-                fileName = fileName.substring(1);
+                const Action = require(fullFilePath);
 
-            this.Actions[fileName] = new Action();
+                let fileName = file
+                    .replace(actionsPath, '')
+                    .replace('.ts', '')
+                    .replace('.js', '');
+
+                if (fileName[0] === '/')
+                    fileName = fileName.substring(1);
+
+                this.Actions[fileName] = new Action();
+            }
         }
 
         this.server = serverOptions.server;
