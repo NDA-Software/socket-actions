@@ -11,10 +11,6 @@ This is still a work in progress. The objective is to create an easy to use with
 
 ## Roadmap:
 
-- 0.4.0:
-
-  - Add option to import the Actions on your own and suplying them instead of giving the path to actions and the socket using require.
-
 - 0.5.0:
 
   - Isolate common types in typing file.
