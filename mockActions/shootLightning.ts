@@ -1,6 +1,6 @@
 import { Action, type ActionParameters } from '../src';
 
-module.exports = class ShootLightning extends Action {
+export default class ShootLightning extends Action {
     protected override async onCheckPermissions(_parameters: ActionParameters): Promise<void> {
         const { userData } = _parameters;
 

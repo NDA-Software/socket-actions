@@ -1,7 +1,7 @@
 import { type ActionParameters } from '../src';
 import Action from '../src/server/action';
 
-module.exports = class TestUserData extends Action {
+export default class TestUserData extends Action {
     override async onRun(params: ActionParameters): Promise<void> {
         const { socket, userData } = params;
 

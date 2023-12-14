@@ -2,6 +2,12 @@ import WebSocket from 'ws';
 
 import { Socket, type onAuth as onAuthType } from '../src';
 
+import ShootLightning from '../mockActions/shootLightning';
+
+const actions = {
+    shootLightning: new ShootLightning()
+};
+
 const connect = (): WebSocket => new WebSocket('ws://localhost:3001');
 
 let socketServer: Socket | null = null;
@@ -19,7 +25,7 @@ const onAuth: onAuthType = async (socket) => {
 
 beforeAll(() => {
     socketServer = new Socket({
-        actionsPath: './mockActions',
+        actions,
         port: 3001,
         onAuth
     });
@@ -52,7 +58,7 @@ describe('Action:', () => {
                     expect(message.data).toBe('Authenticated! - Color: red');
 
                     con1.send(JSON.stringify({
-                        path: 'shootLigthning',
+                        path: 'shootLightning',
                         data: {}
                     }));
                     break;
@@ -61,7 +67,7 @@ describe('Action:', () => {
                     expect(message.data).toBe('You cannot do that.');
 
                     con2.send(JSON.stringify({
-                        path: 'shootLigthning',
+                        path: 'shootLightning',
                         data: {}
                     }));
                     break;

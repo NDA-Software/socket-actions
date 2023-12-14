@@ -1,11 +1,29 @@
 import WebSocket from 'ws';
+import { validate as uuidValidate } from 'uuid';
+
 import Socket, {
     type onAuth as onAuthType,
     type onError as onErrorType,
     type onMessage as onMessageType
 } from '../src/server/socket';
 
-import { validate as uuidValidate } from 'uuid';
+import { type Action } from '../src';
+
+import FailToHitMonster from '../mockActions/failToHitMonster';
+import GetId from '../mockActions/getId';
+import Hello from '../mockActions/hello';
+import HitMonster from '../mockActions/hitMonster';
+import Mistake from '../mockActions/mistake';
+import TestUserData from '../mockActions/testUserData';
+
+const actions: Record<string, Action> = {
+    failToHitMonster: new FailToHitMonster(),
+    getId: new GetId(),
+    hello: new Hello(),
+    hitMonster: new HitMonster(),
+    mistake: new Mistake(),
+    testUserData: new TestUserData()
+};
 
 let socketServer: Socket | null = null;
 let connectionCounter = 0;
@@ -42,7 +60,7 @@ const onError: onErrorType = async (socket, err) => {
 
 beforeAll(() => {
     socketServer = new Socket({
-        actionsPath: './mockActions',
+        actions,
         onConnection,
         onAuth,
         onMessage,

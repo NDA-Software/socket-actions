@@ -1,7 +1,7 @@
 import { type ActionParameters } from '../src';
 import Action from '../src/server/action';
 
-module.exports = class Mistake extends Action {
+export default class Mistake extends Action {
     override async onRun(_params: ActionParameters): Promise<void> {
         throw new Error('You were defeated.');
     }
