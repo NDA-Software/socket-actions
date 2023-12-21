@@ -1,5 +1,3 @@
-import { type ActionParameters } from './socket';
-
 export default abstract class Action {
     async prepareAction (): Promise<void> {}
 

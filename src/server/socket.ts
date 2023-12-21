@@ -1,4 +1,4 @@
-import ws, { type ServerOptions, type WebSocket } from 'ws';
+import ws, { type ServerOptions } from 'ws';
 import express from 'express';
 import { type IncomingMessage, type Server } from 'http';
 import bodyParser from 'body-parser';
@@ -7,23 +7,6 @@ import { v4 as uuid } from 'uuid';
 
 import { executeOnFiles } from 'ts-cornucopia/file';
 import type Action from './action';
-
-export type DataType = Record<string, any>;
-
-export type MessageObject = {
-    path: string,
-    data: DataType
-};
-
-export type ActionParameters = {
-    data: DataType,
-    userData: DataType,
-    socket: ClientSocket
-}
-
-export type ClientSocket = WebSocket & {
-    userData: DataType
-};
 
 export type onConnection = (socket: ClientSocket, req: IncomingMessage) => Promise<void>;
 
