@@ -1,4 +1,4 @@
-import { Action, type ActionParameters } from '../src';
+import { Action } from '../src';
 
 export default class ShootLightning extends Action {
     protected override async onCheckPermissions(_parameters: ActionParameters): Promise<void> {

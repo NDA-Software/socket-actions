@@ -1,4 +1,4 @@
-import { Action, type ActionParameters } from '../src';
+import { Action } from '../src';
 
 export default class Hello extends Action {
     override async onRun(params: ActionParameters): Promise<void> {

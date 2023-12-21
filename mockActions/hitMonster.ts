@@ -1,4 +1,3 @@
-import { type ActionParameters } from '../src';
 import Action from '../src/server/action';
 
 export default class HitMonster extends Action {

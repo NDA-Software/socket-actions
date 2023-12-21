@@ -90,7 +90,7 @@ const preserveModules = (Object.keys(exports)).length > 1;
 const configCjs = {
     output: [{}],
     plugins: [
-        indexer('src'),
+        indexer('src', { ignoredFiles: 'global.d.ts' }),
         indexer('src/server', { nameCasing: 'PascalCase' })
     ]
 };
@@ -212,7 +212,7 @@ if (hasTypes) {
         ...mockConfig,
         plugins: [
             del({
-                targets: ['dist/types/src', 'dist/types/tests', 'dist/types/helpers/', 'dist/types/server'],
+                targets: ['dist/types/src', 'dist/types/tests', 'dist/types/helpers/', 'dist/types/server', 'dist/types/mockActions'],
                 recursive: true
             })
         ]
