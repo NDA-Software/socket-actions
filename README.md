@@ -9,12 +9,25 @@ This is still a work in progress. The objective is to create an easy to use with
 - [Socket](/docs/server/socket.md): The main class that is used to instantiate the server allowing connection through websocket protocols.
 - [Action](/docs/server/action.md): The class that should be extended by all actions to be called by the socket instance.
 
+## Common Types
+
+- DataType: Alias for Record<string, any>.
+
+- MessageObject: Object sent from user as a JSON string message.
+
+  - path (string): Path to action that will be called.
+  - data (DataType): Data sent from user.
+
+- ClientSocket: Extension of the type WebSocket from package "ws" adding userData attribute.
+
+  - userData (DataType): To hold user-specific data after login and between action executions.
+
+- ActionParameters: Parameter object that is sent to action during execution.
+  - socket (ClientSocket): User-specific socket for communication.
+  - userData (DataType): User-specific data.
+  - data (DataType): Data sent from user.
+
 ## Roadmap:
-
-- 0.5.0:
-
-  - Isolate common types in typing file.
-  - Document common types.
 
 - 1.0.0:
 

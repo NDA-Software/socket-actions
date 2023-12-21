@@ -8,13 +8,13 @@ declare global {
      data: DataType
  };
 
- type ActionParameters = {
-     data: DataType,
-     userData: DataType,
-     socket: ClientSocket
- }
-
  type ClientSocket = WebSocket & {
      userData: DataType
  };
+
+ type ActionParameters = {
+     socket: ClientSocket
+     userData: DataType,
+     data: DataType,
+ }
 }

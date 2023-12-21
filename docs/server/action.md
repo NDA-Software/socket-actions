@@ -12,17 +12,17 @@ This abstract class serves as a template to be extended for all action classes t
 
 This is the object given by the Socket class every time the action is called, it contains these attributes:
 
-- data (Record<string, any>): This object represents the data parsed from the message sent from the user.
-- userData (Record<string, any>): This object expected to be filled during authentication will have all relevant data from the user that sent the message.
-  socket: (ClientSocket): User identifying socket that can be used to interact with the user that sent the message.
+- data ([DataType](/README.md#common-types)): This object represents the data parsed from the message sent from the user.
+- userData ([DataType](/README.md#common-types)): This object expected to be filled during authentication will have all relevant data from the user that sent the message.
+  socket: ([ClientSocket](/README.md#common-types)): User identifying socket that can be used to interact with the user that sent the message.
 
 ## Optional Overrides
 
-- prepareAction () => Promise<void>: This method is called once during the starting setup of the Socket class and should be used for any starting setup that requires assyncrhonous execution like starting database connections.
+- prepareAction () => Promise\<void\>: This method is called once during the starting setup of the Socket class and should be used for any starting setup that requires assyncrhonous execution like starting database connections.
 
-- onCheckPermissions (\_parameters: ActionParameters) => Promise<void>: This method runs before all executions of the method onRun and should be used to check for any permissions the user might or not have to execute the action. Throwing an error will prevent the execution of onRun.
+- onCheckPermissions (\_parameters: [ActionParameters](/README.md#common-types)) => Promise\<void\>: This method runs before all executions of the method onRun and should be used to check for any permissions the user might or not have to execute the action. Throwing an error will prevent the execution of onRun.
 
-- onError (\_parameters: ActionParameters, err: unknown) => Promise<void>: This method is called whenever any error happens in onCheckPermissions or onRun and should be used for anything related to error threatment.
+- onError (\_parameters: [ActionParameters](/README.md#common-types), err: unknown) => Promise\<void\>: This method is called whenever any error happens in onCheckPermissions or onRun and should be used for anything related to error threatment.
 
 ### Public Methods
 

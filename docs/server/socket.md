@@ -14,14 +14,14 @@ This class extends WebSocket.Server and adds wrappers to some of the relevant We
 - url (Default: "http://localhost"): Url in which the express server and socket will be run.
 - port (Default: 3000): Port in which the express server and socket will be run.
 - actionsPath (Default: "./actions"): String of the path in which actions will be dynamically imported. In this folder it is expected that all files use "module.exports = " for exporting a class that extends Action class.
-- actions (Default: undefined): Alternative to giving a path to the actions folder, you can also import and instantiate the actions and supply them in a structure of Record<string, Action> being the string the path that will be used to call the action from the client.
+- actions (Default: undefined): Alternative to giving a path to the actions folder, you can also import and instantiate the actions and supply them in a structure of DataType being the string the path that will be used to call the action from the client.
 - disableAuthentication (Default: false): If set to true, this option will prevent onAuth to be executed, making the first message go directly to onMessage.
 
 ## Event Options
 
 All event options receive a "socket" object of type ClientSocket that represents the current active connection to the user that triggered the event.
 
-The ClientSocket object is a child of the WebSocket object from the package ws with an added field called userData of type Record<string, any> that can be used to store any persistent user data and is expected to be initially filled during onAuth.
+The ClientSocket object is a child of the WebSocket object from the package "ws" with an added field called userData of type DataType that can be used to store any persistent user data and is expected to be initially filled during onAuth.
 
 These options are added to the constructor together with the options object above and all have their own documentation file with more details:
 
