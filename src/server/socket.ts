@@ -4,6 +4,7 @@ import { type IncomingMessage, type Server } from 'http';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import { v4 as uuid } from 'uuid';
+import listenerFactory from '../helpers/listenerFactory';
 
 import { executeOnFiles } from 'ts-cornucopia/file';
 import type Action from './action';
@@ -15,9 +16,6 @@ export type onMessage = (socket: ClientSocket, messageObject: MessageObject) => 
 
 export type onClose = (socket: ClientSocket) => Promise<void>;
 export type onError = (socket: ClientSocket, err: Error) => Promise<void>;
-
-type EmptyPromise = (...args: any[]) => Promise<void>;
-type EmptyFunction = (...args: any[]) => void;
 
 export type SocketOptions = {
     serverOptions?: ServerOptions
@@ -45,15 +43,6 @@ const authenticationNotImplemented = async (): Promise<void> => {
 };
 
 const emptyPromiseFunction = async (): Promise<void> => {};
-
-const listenerFactory = (ctx: ws.Server, socket: ClientSocket | null, callback: EmptyPromise): EmptyFunction => {
-    return (...args: any[]) => {
-        if (socket !== null)
-            args = [socket, ...args];
-
-        void callback.apply(ctx, args);
-    };
-};
 
 export default class Socket extends ws.Server {
     public readonly server: Server | undefined;
@@ -193,6 +182,8 @@ export default class Socket extends ws.Server {
 
             if (socket.userData.id === undefined)
                 socket.userData.id = uuid();
+
+            socket.send('Authenticated');
         } catch (err) {
             await this.reportingError(socket, err as Error);
 
