@@ -2,13 +2,14 @@ import WebSocket from 'ws';
 
 import listenerFactory, { type FactoryFunction } from './helpers/listenerFactory';
 
-export type messageReceiver = (message: string) => Promise<void>;
+export type messageReceiver = (message: MessageEvent) => Promise<void>;
 
 export type clientOptions = {
     authentication?: any,
     protocols?: string | string[],
     onMessage?: messageReceiver,
-    onAuthFailed?: messageReceiver,
+    onAuthSuccess?: messageReceiver,
+    onAuthFailure?: messageReceiver,
 }
 
 export default class Client extends WebSocket {
@@ -20,7 +21,9 @@ export default class Client extends WebSocket {
 
     private readonly onMessage: messageReceiver | undefined;
 
-    private readonly onAuthFailed: messageReceiver | undefined;
+    private readonly onAuthSuccess: messageReceiver | undefined;
+
+    private readonly onAuthFailure: messageReceiver | undefined;
 
     private _isAuthenticated = false;
 
@@ -37,14 +40,16 @@ export default class Client extends WebSocket {
         this.onAuthResponse = listenerFactory(this, null, this.authResponse);
         this.onMessageResponse = listenerFactory(this, null, this.messageResponse);
 
-        this.onAuthFailed = options.onAuthFailed;
+        this.onAuthSuccess = options.onAuthSuccess;
+        this.onAuthFailure = options.onAuthFailure;
         this.onMessage = options.onMessage;
 
-        this.on('open', listenerFactory(this, null, this.onOpen));
+        this.onopen = listenerFactory(this, null, this.onOpen);
     }
 
     private async onOpen(): Promise<void> {
         const { auth } = this;
+
         if (auth !== undefined)
             await this.tryAuth();
         else
@@ -52,26 +57,35 @@ export default class Client extends WebSocket {
     }
 
     private enableMessageReceiver (): void {
-        this.on('message', this.onMessageResponse);
+        this.onmessage = this.onMessageResponse;
     }
 
-    private async authResponse(message: string): Promise<void> {
-        this.removeListener('message', this.onAuthResponse);
+    private async authResponse({ data }: MessageEvent): Promise<void> {
+        const message = data;
+
+        this.removeEventListener('message', this.onAuthResponse);
 
         if (message !== 'Authenticated') {
-            if (this.onAuthFailed !== undefined)
-                await this.onAuthFailed(message);
+            if (this.onAuthFailure !== undefined)
+                await this.onAuthFailure(message);
 
             return;
         }
 
         this._isAuthenticated = true;
 
+        if (this.onAuthSuccess !== undefined)
+            await this.onAuthSuccess(message);
+
         this.enableMessageReceiver();
     }
 
-    private async messageResponse(message: string): Promise<void> {
-        message = JSON.parse(message);
+    private async messageResponse(message: MessageEvent): Promise<void> {
+        try {
+            message = JSON.parse(message.data);
+        } catch (err) {
+            // Not a JSON.
+        }
 
         if (this.onMessage !== undefined)
             await this.onMessage(message);
@@ -84,14 +98,18 @@ export default class Client extends WebSocket {
     public async tryAuth(): Promise<void> {
         this.send(this.auth);
 
-        this.on('message', this.onAuthResponse);
+        this.onmessage = this.onAuthResponse;
     }
 
-    public sendAction(path: string, data: Record<string, any>): void {
-        const message = JSON.stringify({
-            path,
-            data
-        });
+    public sendAction(path: string, data?: Record<string, any>): void {
+        const messageObj: any = {
+            path
+        };
+
+        if (data !== undefined)
+            messageObj.data = data;
+
+        const message = JSON.stringify(messageObj);
 
         this.send(message);
     }
