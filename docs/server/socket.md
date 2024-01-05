@@ -27,6 +27,8 @@ These options are added to the constructor together with the options object abov
 
 - [onConnection](/docs/server/socketEvents/onConnection.md): Executed when connection from client is stablished.
 - [onAuth](/docs/server/socketEvents/onAuth.md): Executed on the first message to prevent execution of actions before proper authentication.
+- [onAuthFailure](/docs/server/socketEvents/onAuthFailure.md): Executed when onAuth ends with error.
+- [onAuthSuccess](/docs/server/socketEvents/onAuthSuccess.md): Executed when onAuth runs without error.
 - [onClose](/docs/server/socketEvents/onClose.md): Executed when client closes connection.
 - [onError](/docs/server/socketEvents/onError.md): Executed when an unthreated exception is thrown inside any action or event.
 - [onMessage](/docs/server/socketEvents/onMessage.md): Executed on all message events after proper authentication (or disable of authentication) and before the execution of the action, this is expected to be used if any threatment to the exact data sent from the user is needed.
