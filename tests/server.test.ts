@@ -36,11 +36,9 @@ const onConnection = async (): Promise<void> => {
     connectionCounter++;
 };
 
-const onAuth: onAuthType = async (socket, message) => {
+const onAuth: onAuthType = async (_, message) => {
     if (message.toString() !== 'trustMe!')
         throw new Error('Access Denied!');
-
-    socket.send('Authenticated!');
 };
 
 let firstHit = true;
@@ -116,7 +114,7 @@ describe('Socket:', () => {
                     break;
 
                 case 2: // Expect authentication success.
-                    expect(message.data).toBe('Authenticated!');
+                    expect(message.data).toBe('Authenticated');
 
                     con.send(JSON.stringify({
                         path: 'hello',

@@ -20,7 +20,7 @@ const onAuth: onAuthType = async (socket) => {
 
     firstConnection = false;
 
-    socket.send(`Authenticated! - Color: ${socket.userData.swordColor}`);
+    socket.send(`Color: ${socket.userData.swordColor}`);
 };
 
 beforeAll(() => {
@@ -48,14 +48,24 @@ describe('Action:', () => {
 
         const onMessage = (message: any): void => {
             switch (messageCounter) {
-                case 0: // Authenticating Connection 1
-                    expect(message.data).toBe('Authenticated! - Color: green');
+                case 0: // Connection 1
+                    expect(message.data).toBe('Color: green');
+
+                    break;
+
+                case 1: // Authenticating Connection 1
+                    expect(message.data).toBe('Authenticated');
 
                     con2.send('hey');
                     break;
 
-                case 1: // Authenticating Connection 2
-                    expect(message.data).toBe('Authenticated! - Color: red');
+                case 2: // Authenticating Connection 2
+                    expect(message.data).toBe('Color: red');
+
+                    break;
+
+                case 3: // Authenticating Connection 2
+                    expect(message.data).toBe('Authenticated');
 
                     con1.send(JSON.stringify({
                         path: 'shootLightning',
@@ -63,7 +73,7 @@ describe('Action:', () => {
                     }));
                     break;
 
-                case 2: // Expecting failure due to permissions in Connection 1
+                case 4: // Expecting failure due to permissions in Connection 1
                     expect(message.data).toBe('You cannot do that.');
 
                     con2.send(JSON.stringify({
@@ -72,7 +82,7 @@ describe('Action:', () => {
                     }));
                     break;
 
-                case 3: // Expecting success in Connection 2
+                case 5: // Expecting success in Connection 2
                     expect(message.data).toBe('I am firing my lazer! DAAAAAAAAAAAAAAAH!');
 
                     con1.close();
