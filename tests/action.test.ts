@@ -19,8 +19,6 @@ const onAuth: onAuthType = async (socket) => {
     };
 
     firstConnection = false;
-
-    socket.send(`Color: ${socket.userData.swordColor}`);
 };
 
 beforeAll(() => {
@@ -46,26 +44,16 @@ describe('Action:', () => {
 
         let messageCounter: number = 0;
 
-        const onMessage = (message: any): void => {
+        const onMessage = ({ data: message }: any): void => {
             switch (messageCounter) {
                 case 0: // Connection 1
-                    expect(message.data).toBe('Color: green');
-
-                    break;
-
-                case 1: // Authenticating Connection 1
-                    expect(message.data).toBe('Authenticated');
+                    expect(message).toBe('Authenticated');
 
                     con2.send('hey');
                     break;
 
-                case 2: // Authenticating Connection 2
-                    expect(message.data).toBe('Color: red');
-
-                    break;
-
-                case 3: // Authenticating Connection 2
-                    expect(message.data).toBe('Authenticated');
+                case 1: // Connection 2
+                    expect(message).toBe('Authenticated');
 
                     con1.send(JSON.stringify({
                         path: 'shootLightning',
@@ -73,8 +61,8 @@ describe('Action:', () => {
                     }));
                     break;
 
-                case 4: // Expecting failure due to permissions in Connection 1
-                    expect(message.data).toBe('You cannot do that.');
+                case 2: // Expecting failure due to permissions in Connection 1
+                    expect(message).toBe('You cannot do that.');
 
                     con2.send(JSON.stringify({
                         path: 'shootLightning',
@@ -82,8 +70,8 @@ describe('Action:', () => {
                     }));
                     break;
 
-                case 5: // Expecting success in Connection 2
-                    expect(message.data).toBe('I am firing my lazer! DAAAAAAAAAAAAAAAH!');
+                case 3: // Expecting success in Connection 2
+                    expect(message).toBe('I am firing my lazer! DAAAAAAAAAAAAAAAH!');
 
                     con1.close();
                     con2.close();

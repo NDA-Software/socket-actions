@@ -99,7 +99,7 @@ describe('Socket:', () => {
         con.onmessage = (message) => {
             switch (messageCounter) {
                 case 0: // Expected failure of authentication.
-                    expect(message.data).toBe('Access Denied!');
+                    expect(message.data).toBe('Failed Authentication');
 
                     con.send(JSON.stringify({
                         path: 'hello',
@@ -108,7 +108,7 @@ describe('Socket:', () => {
                     break;
 
                 case 1: // Expected failure of action due to lack of previous authentication.
-                    expect(message.data).toBe('Access Denied!');
+                    expect(message.data).toBe('Failed Authentication');
 
                     con.send('trustMe!');
                     break;

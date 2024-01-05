@@ -11,7 +11,10 @@ import type Action from './action';
 
 export type onConnection = (socket: ClientSocket, req: IncomingMessage) => Promise<void>;
 
-export type onAuth = (socket: ClientSocket, message: string) => Promise<void>;
+export type onAuth = (socket: ClientSocket, message: Buffer) => Promise<void>;
+export type onAuthSuccess = (socket: ClientSocket, message: Buffer) => Promise<void>;
+export type onAuthFailure = (socket: ClientSocket, error: Error, message: Buffer) => Promise<void>;
+
 export type onMessage = (socket: ClientSocket, messageObject: MessageObject) => Promise<void>;
 
 export type onClose = (socket: ClientSocket) => Promise<void>;
@@ -24,10 +27,12 @@ export type SocketOptions = {
     actionsPath?: string,
     actions?: Record<string, Action>,
     disableAuthentication?: boolean,
-    onConnection?: onConnection
-    onAuth?: onAuth
-    onClose?: onClose
-    onError?: onError
+    onConnection?: onConnection,
+    onAuth?: onAuth,
+    onAuthSuccess?: onAuthSuccess,
+    onAuthFailure?: onAuthFailure,
+    onClose?: onClose,
+    onError?: onError,
     onMessage?: onMessage
 }
 
@@ -42,6 +47,14 @@ const authenticationNotImplemented = async (): Promise<void> => {
     throw new Error('Authentication not implemented. Maybe you forgot to disable it.');
 };
 
+const onAuthSuccessDefault = async (socket: ClientSocket): Promise<void> => {
+    socket.send('Authenticated');
+};
+
+const onAuthFailureDefault = async (socket: ClientSocket): Promise<void> => {
+    socket.send('Failed Authentication');
+};
+
 const emptyPromiseFunction = async (): Promise<void> => {};
 
 export default class Socket extends ws.Server {
@@ -49,6 +62,8 @@ export default class Socket extends ws.Server {
 
     private readonly onConnection: onConnection;
     private readonly onAuth: onAuth;
+    private readonly onAuthSuccess: onAuthSuccess;
+    private readonly onAuthFailure: onAuthFailure;
     private readonly onClose: onClose;
     private readonly onError: onError;
     private readonly onMessage: onMessage;
@@ -66,6 +81,8 @@ export default class Socket extends ws.Server {
             disableAuthentication,
             onConnection,
             onAuth,
+            onAuthSuccess,
+            onAuthFailure,
             onClose,
             onError,
             onMessage
@@ -88,9 +105,7 @@ export default class Socket extends ws.Server {
                 optionsSuccessStatus: 200
             }));
 
-            serverOptions.server = app.listen(port, () => {
-                console.log(`Express listening at ${url}:${port}`);
-            });
+            serverOptions.server = app.listen(port);
         }
 
         super(serverOptions);
@@ -124,14 +139,14 @@ export default class Socket extends ws.Server {
 
         this.onConnection = onConnection ?? emptyPromiseFunction;
         this.onAuth = onAuth ?? authenticationNotImplemented;
+        this.onAuthSuccess = onAuthSuccess ?? onAuthSuccessDefault;
+        this.onAuthFailure = onAuthFailure ?? onAuthFailureDefault;
         this.onClose = onClose ?? emptyPromiseFunction;
         this.onError = onError ?? emptyPromiseFunction;
         this.onMessage = onMessage ?? emptyPromiseFunction;
 
         this.prepareAllActions().then(() => {
             this.on('connection', listenerFactory(this, null, this.connecting));
-
-            console.log(`SocketActions listening at ${url.replace('http', 'ws')}:${port}`);
         }).catch((err) => {
             throw new Error(err);
         });
@@ -173,7 +188,7 @@ export default class Socket extends ws.Server {
         }
     }
 
-    private async authenticating (socket: ClientSocket, message: string): Promise<void> {
+    private async authenticating (socket: ClientSocket, message: Buffer): Promise<void> {
         try {
             await this.onAuth(socket, message);
 
@@ -182,10 +197,8 @@ export default class Socket extends ws.Server {
 
             if (socket.userData.id === undefined)
                 socket.userData.id = uuid();
-
-            socket.send('Authenticated');
         } catch (err) {
-            await this.reportingError(socket, err as Error);
+            await this.onAuthFailure(socket, err as Error, message);
 
             return;
         }
@@ -193,6 +206,8 @@ export default class Socket extends ws.Server {
         socket.removeAllListeners('message');
 
         socket.on('message', listenerFactory(this, socket, this.receivingMessage));
+
+        await this.onAuthSuccess(socket, message);
     }
 
     private async receivingMessage (socket: ClientSocket, message: string): Promise<void> {
