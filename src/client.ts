@@ -24,7 +24,7 @@ const defaultOptions = {
 };
 
 export default class Client extends WebSocket {
-    readonly auth: any;
+    private _authentication: any;
 
     private readonly preparedOnAuthResponse: FactoryFunction;
 
@@ -43,12 +43,12 @@ export default class Client extends WebSocket {
     constructor(options: clientOptions = {}) {
         super(options.url ?? defaultOptions.url, options.protocols);
 
-        let { authentication: auth } = options;
+        let { authentication } = options;
 
-        if (auth !== undefined && typeof auth === 'object')
-            auth = JSON.stringify(auth);
+        if (authentication !== undefined && typeof authentication === 'object')
+            authentication = JSON.stringify(authentication);
 
-        this.auth = auth;
+        this._authentication = authentication;
 
         this.preparedOnAuthResponse = listenerFactory(this, null, this.authResponse);
         this.preparedOnMessageResponse = listenerFactory(this, null, this.messageResponse);
@@ -62,9 +62,9 @@ export default class Client extends WebSocket {
     }
 
     private async onOpen(): Promise<void> {
-        const { auth } = this;
+        const { _authentication: authentication } = this;
 
-        if (auth !== undefined)
+        if (authentication !== undefined)
             await this.tryAuth();
         else
             this.enableMessageReceiver();
@@ -98,12 +98,19 @@ export default class Client extends WebSocket {
             await this.onMessage(message);
     }
 
+    public get authentication(): any {
+        return this._authentication;
+    }
+
     public get isAuthenticated(): boolean {
         return this._isAuthenticated;
     }
 
-    public async tryAuth(): Promise<void> {
-        this.send(this.auth);
+    public async tryAuth(authentication?: any): Promise<void> {
+        if (authentication !== undefined)
+            this._authentication = authentication;
+
+        this.send(this._authentication);
 
         this.onmessage = this.preparedOnAuthResponse;
     }

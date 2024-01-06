@@ -27,12 +27,12 @@ These options are added to the constructor together with the options object abov
 
 ### Public Attributes
 
-- auth (Readonly any): This will keep the authentication provided in the constructor for later check if necessary.
+- authentication (Readonly any): This will keep the authentication provided in the constructor for later check if necessary.
 - isAuthenticated (Readonly boolean): This changes to true after onAuthResponse runs with no errors.
 
 ### Public Methods
 
-- tryAuth: This method can be called any time when the client wants to authenticate again.
+- tryAuth (authentcation?: any): This method can be called any time when the client wants to authenticate again, the authentication can be updated by passing the new one as a parameter.
 - sendAction (path: string, data?: Record\<string, any>): This method calls an action with the path given, a data object can be sent with the action as parameter to the action.
 
 ## Usage:
