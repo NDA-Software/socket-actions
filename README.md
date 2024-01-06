@@ -2,7 +2,7 @@
 
 ## Description
 
-This is still a work in progress. The objective is to create an easy to use with little to no configuration WebSocket package (running on top of [ws](https://www.npmjs.com/package/ws)) to run with an object oriented structure to allow routing of WebSocket messages.
+The objective is to create an easy to use with little to no configuration WebSocket package (running on top of [ws](https://www.npmjs.com/package/ws)) to run with an object oriented structure to allow routing of WebSocket messages.
 
 ## Classes
 
@@ -29,10 +29,6 @@ This is still a work in progress. The objective is to create an easy to use with
   - data (DataType): Data sent from user.
 
 ## Roadmap:
-
-- 1.0.0:
-
-  - Update previous tests to all use the client class instead of default WebSocket client.
 
 - Before next update:
 
