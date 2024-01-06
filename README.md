@@ -32,9 +32,7 @@ This is still a work in progress. The objective is to create an easy to use with
 
 - 1.0.0:
 
-  - Add tests and documentation to client class.
   - Update previous tests to all use the client class instead of default WebSocket client.
-  - Update this documentation with all missing informations.
 
 - Before next update:
 

@@ -5,6 +5,7 @@ import listenerFactory, { type FactoryFunction } from './helpers/listenerFactory
 export type messageReceiver = (message: MessageEvent) => Promise<void>;
 
 export type clientOptions = {
+    url?: string,
     authentication?: any,
     protocols?: string | string[],
     onMessage?: messageReceiver,
@@ -16,6 +17,10 @@ export type clientOptions = {
 const defaultOnAuthResponse = async ({ data }: MessageEvent): Promise<void> => {
     if (data !== 'Authenticated')
         throw new Error(data);
+};
+
+const defaultOptions = {
+    url: 'ws://localhost:3000'
 };
 
 export default class Client extends WebSocket {
@@ -35,8 +40,8 @@ export default class Client extends WebSocket {
 
     private _isAuthenticated = false;
 
-    constructor(url: string, options: clientOptions = {}) {
-        super(url, options.protocols);
+    constructor(options: clientOptions = {}) {
+        super(options.url ?? defaultOptions.url, options.protocols);
 
         let { authentication: auth } = options;
 

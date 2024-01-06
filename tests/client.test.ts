@@ -72,8 +72,8 @@ describe('Client:', () => {
             onAuthSuccess: onMessage, onMessage, onAuthFailure: onMessage
         };
 
-        const con1 = new Client('ws://localhost:3003', { authentication: '12345', ...defaultOptions });
-        const con2 = new Client('ws://localhost:3003', { authentication: '67890', ...defaultOptions });
+        const con1 = new Client({ url: 'ws://localhost:3003', authentication: '12345', ...defaultOptions });
+        const con2 = new Client({ url: 'ws://localhost:3003', authentication: '67890', ...defaultOptions });
     });
 
     test('Testing sendAction...', (done) => {
@@ -89,7 +89,8 @@ describe('Client:', () => {
             done();
         };
 
-        const con = new Client('ws://localhost:3003', {
+        const con = new Client({
+            url: 'ws://localhost:3003',
             authentication: '12345',
             onMessage,
             onAuthSuccess

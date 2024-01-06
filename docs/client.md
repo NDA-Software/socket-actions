@@ -6,11 +6,11 @@ This class extends WebSocket and adds wrappers to some of the relevant WebSocket
 
 ## Constructor
 
-- url: Path to server's socket, generally starting with "ws://" or "wss://" when using SSL.
 - options: Configuration object.
 
 ## Options
 
+- url (Default: "ws://localhost:3000"): Path to server's socket, generally starting with "ws://" or "wss://" when using SSL.
 - protocols: Accepts a string or string array and can be used to pass protocols to the socket server.
 - authentication: Accepts "any" data and if supplied, will be sent to the socket as soon as the connection is opened to try authenticating. If this variable is not set the client will assume authentication is not required and will skip the events onAuthResponse|onAuthSuccess|onAuthFailure and go directly to onMessage on all messages.
 
