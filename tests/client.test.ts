@@ -33,7 +33,7 @@ beforeAll(() => {
 describe('Client:', () => {
     test('Testing authentication...', (done) => {
         let count = 0;
-        const onMessage = async (message: MessageEvent | string): Promise<void> => {
+        const onMessage = async ({ data: message }: MessageEvent): Promise<void> => {
             switch (count) {
                 case 0:
                     expect(message).toBe('Authenticated');
@@ -47,7 +47,7 @@ describe('Client:', () => {
                     break;
 
                 case 2:
-                    expect((message as MessageEvent).data).toBe('I am firing my lazer! DAAAAAAAAAAAAAAAH!');
+                    expect(message).toBe('I am firing my lazer! DAAAAAAAAAAAAAAAH!');
 
                     con2.sendAction('shootLightning');
                     break;
