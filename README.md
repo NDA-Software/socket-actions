@@ -4,10 +4,11 @@
 
 This is still a work in progress. The objective is to create an easy to use with little to no configuration WebSocket package (running on top of [ws](https://www.npmjs.com/package/ws)) to run with an object oriented structure to allow routing of WebSocket messages.
 
-## Server Classes
+## Classes
 
 - [Socket](/docs/server/socket.md): The main class that is used to instantiate the server allowing connection through websocket protocols.
 - [Action](/docs/server/action.md): The class that should be extended by all actions to be called by the socket instance.
+- [Client](/docs/client.md): This class to be used in the client-side to communicate with the Socket class' instance.
 
 ## Common Types
 
@@ -31,7 +32,6 @@ This is still a work in progress. The objective is to create an easy to use with
 
 - 1.0.0:
 
-  - Create client class to ease integration and avoid the need to use "ws" client to consume the server.
   - Add tests and documentation to client class.
   - Update previous tests to all use the client class instead of default WebSocket client.
   - Update this documentation with all missing informations.
