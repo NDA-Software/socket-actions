@@ -33,12 +33,15 @@ beforeAll(() => {
 describe('Client:', () => {
     test('Testing authentication...', (done) => {
         let count = 0;
-        const onMessage = async ({ data: message }: MessageEvent): Promise<void> => {
-            switch (count) {
-                case 0:
-                    expect(message).toBe('Authenticated');
-                    break;
 
+        const onOpen = async (): Promise<void> => {
+            count++;
+        };
+
+        const onMessage = async ({ data: message }: MessageEvent): Promise<void> => {
+            console.log(message);
+
+            switch (count) {
                 case 1:
                     expect(message).toBe('Failed Authentication');
 
@@ -69,7 +72,7 @@ describe('Client:', () => {
         };
 
         const defaultOptions = {
-            onAuthSuccess: onMessage, onMessage, onAuthFailure: onMessage
+            onOpen, onMessage, onAuthFailure: onMessage
         };
 
         const con1 = new Client({ url: 'ws://localhost:3003', authentication: '12345', ...defaultOptions });
@@ -77,7 +80,7 @@ describe('Client:', () => {
     });
 
     test('Testing sendAction...', (done) => {
-        const onAuthSuccess = async (): Promise<void> => {
+        const onOpen = async (): Promise<void> => {
             con.sendAction('hello', { name: 'Test' });
         };
 
@@ -93,7 +96,7 @@ describe('Client:', () => {
             url: 'ws://localhost:3003',
             authentication: '12345',
             onMessage,
-            onAuthSuccess
+            onOpen
         });
     });
 });

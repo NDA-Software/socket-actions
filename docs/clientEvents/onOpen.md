@@ -1,8 +1,8 @@
-# onAuthSuccess (message: MessageEvent): Promise\<void>
+# onOpen (message: MessageEvent): Promise\<void>
 
 ## Description
 
-This event is executed after the onAuthResponse event runs without errors. This can be used as a signal to start using the client to sending messages.
+This event is executed after the onAuthResponse event runs without errors or as soon as the connection is opened if authentication is not enabled. This can be used as a signal to start using the client to sending messages.
 
 ## Parameters
 
@@ -17,7 +17,7 @@ import Client from "socket-actions/client";
 
 const client = new Client("ws://localhost:3000", {
     auth: '42',
-    onAuthSuccess: () => {
+    onOpen: () => {
         client.sendAction("hello", { target: 'World' });
     }
 });
