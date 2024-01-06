@@ -1,4 +1,3 @@
-import WebSocket from 'ws';
 import { validate as uuidValidate } from 'uuid';
 
 import Socket, {
@@ -16,6 +15,8 @@ import HitMonster from '../mockActions/hitMonster';
 import Mistake from '../mockActions/mistake';
 import TestUserData from '../mockActions/testUserData';
 
+import Client from '../src/client';
+
 const actions: Record<string, Action> = {
     failToHitMonster: new FailToHitMonster(),
     getId: new GetId(),
@@ -29,8 +30,6 @@ let unsafeSocket: Socket | null = null;
 let socketServer: Socket | null = null;
 
 let connectionCounter = 0;
-
-const connect = (): WebSocket => new WebSocket('ws://localhost:3000');
 
 const onConnection = async (): Promise<void> => {
     connectionCounter++;
@@ -77,130 +76,112 @@ beforeAll(() => {
 
 describe('Socket:', () => {
     test('Testing onConnection...', (done) => {
-        const con = connect();
+        const con = new Client({
+            authentication: 'trustMe!',
+            onOpen: async () => {
+                expect(connectionCounter).toBe(1);
 
-        con.onopen = () => {
-            expect(connectionCounter).toBe(1);
+                con.close();
 
-            con.close();
-
-            done();
-        };
+                done();
+            }
+        });
     });
 
+    let messageCounter: number = 0;
+
     test('Testing onAuth...', (done) => {
-        const con = connect();
+        const con = new Client({
+            authentication: 'notTrusted',
+            onAuthFailure: async ({ data: message }: MessageEvent) => {
+                switch (messageCounter) {
+                    case 0: // Expected failure of authentication.
+                        expect(message).toBe('Failed Authentication');
 
-        con.onopen = () => {
-            con.send('notTrusted');
-        };
+                        con.sendAction('hello', { name: 'World' });
+                        break;
 
-        let messageCounter: number = 0;
-        con.onmessage = (message) => {
-            switch (messageCounter) {
-                case 0: // Expected failure of authentication.
-                    expect(message.data).toBe('Failed Authentication');
+                    case 1: // Expected failure of action due to lack of previous authentication.
+                        expect(message).toBe('Failed Authentication');
 
-                    con.send(JSON.stringify({
-                        path: 'hello',
-                        data: { name: 'World' }
-                    }));
-                    break;
+                        con.tryAuth('trustMe!');
+                        break;
+                }
 
-                case 1: // Expected failure of action due to lack of previous authentication.
-                    expect(message.data).toBe('Failed Authentication');
+                messageCounter++;
+            },
+            onOpen: async () => { // Expect authentication success.
+                con.sendAction('hello', { name: 'World' });
 
-                    con.send('trustMe!');
-                    break;
+                messageCounter++;
+            },
+            onMessage: async ({ data: message }: MessageEvent) => {
+                switch (messageCounter) {
+                    case 3: // Expect action to be executed.
+                        expect(message).toBe('Hello World!');
 
-                case 2: // Expect authentication success.
-                    expect(message.data).toBe('Authenticated');
+                        con.sendAction('getId');
+                        break;
 
-                    con.send(JSON.stringify({
-                        path: 'hello',
-                        data: { name: 'World' }
-                    }));
-                    break;
+                    case 4:
+                        expect(
+                            uuidValidate(message)
+                        ).toBe(true);
 
-                case 3: // Expect action to be executed.
-                    expect(message.data).toBe('Hello World!');
+                        con.close();
+                        done();
+                        break;
+                }
 
-                    con.send(JSON.stringify({
-                        path: 'getId'
-                    }));
-                    break;
-
-                case 4:
-                    expect(
-                        uuidValidate(message.data as string)
-                    ).toBe(true);
-
-                    con.close();
-                    done();
-                    break;
+                messageCounter++;
             }
-
-            messageCounter++;
-        };
+        });
     });
 
     test('Testing onMessage...', (done) => {
-        const con = connect();
-
-        con.onopen = () => {
-            con.send('trustMe!');
-        };
-
         let messageCounter: number = 0;
-        con.onmessage = (message) => {
-            switch (messageCounter) {
-                case 0:
-                    con.send(JSON.stringify({ path: 'hitMonster' }));
-                    break;
 
-                case 1: // Expect for attack to have failed.
-                    expect(message.data).toBe('You missed! Please wait for the bald guy\'s help.');
+        const con = new Client({
+            authentication: 'trustMe!',
+            onOpen: async () => {
+                con.sendAction('hitMonster');
+            },
+            onMessage: async ({ data: message }) => {
+                switch (messageCounter) {
+                    case 0: // Expect for attack to have failed.
+                        expect(message).toBe('You missed! Please wait for the bald guy\'s help.');
 
-                    con.send(JSON.stringify({ path: 'hitMonster' }));
-                    break;
+                        con.sendAction('hitMonster');
+                        break;
 
-                case 2: // Expect action to be executed.
-                    expect(message.data).toBe('ONE PUNCH!');
+                    case 1: // Expect action to be executed.
+                        expect(message).toBe('ONE PUNCH!');
 
-                    con.close();
-                    done();
-                    break;
+                        con.close();
+                        done();
+                        break;
+                }
+
+                messageCounter++;
             }
-
-            messageCounter++;
-        };
+        }
+        );
     });
 
     test('Testing onError...', (done) => {
-        const con = connect();
+        const con = new Client({
+            authentication: 'trustMe!',
+            onOpen: async () => {
+                con.sendAction('mistake');
+            },
+            onMessage: async ({ data: message }) => {
+                con.close();
 
-        con.onopen = () => {
-            con.send('trustMe!');
-        };
+                expect(message).toBe('You were defeated.');
 
-        let firstMessage = true;
-        con.onmessage = (message) => {
-            if (firstMessage) {
-                firstMessage = false;
-
-                con.send(JSON.stringify({
-                    path: 'mistake'
-                }));
-
-                return;
+                done();
             }
-
-            con.close();
-
-            expect(message.data).toBe('You were defeated.');
-
-            done();
-        };
+        });
     });
 
     test('Testing onClose...', (done) => {
@@ -214,22 +195,19 @@ describe('Socket:', () => {
     });
 
     test('Testing unsafe socket and actionsPath...', (done) => {
-        const con = new WebSocket('ws://localhost:3001');
+        const con = new Client({
+            url: 'ws://localhost:3001',
+            onOpen: async () => {
+                con.sendAction('hello');
+            },
+            onMessage: async ({ data: message }) => {
+                expect(message).toBe('Hello from module.exports!');
 
-        con.onopen = () => {
-            con.send(JSON.stringify({
-                path: 'hello'
+                con.close();
 
-            }));
-        };
-
-        con.onmessage = (message) => {
-            expect(message.data).toBe('Hello from module.exports!');
-
-            con.close();
-
-            done();
-        };
+                done();
+            }
+        });
     });
 });
 

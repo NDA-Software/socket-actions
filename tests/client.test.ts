@@ -39,8 +39,6 @@ describe('Client:', () => {
         };
 
         const onMessage = async ({ data: message }: MessageEvent): Promise<void> => {
-            console.log(message);
-
             switch (count) {
                 case 1:
                     expect(message).toBe('Failed Authentication');
