@@ -20,10 +20,10 @@ All event options receive a "MessageEvent" object with the actual message receiv
 
 These options are added to the constructor together with the options object above and all have their own documentation file with more details:
 
-- [onAuthResponse](/docs//clientEvents/onAuthResponse.md): Executed when the first message is received, expects such message to be a confirmation of success or not.
-- [onAuthSuccess](/docs//clientEvents/onAuthSuccess.md): Executed after onAuthResponse runs without errors.
-- [onAuthFailure](/docs//clientEvents/onAuthFailure.md): Executed when onAuthResponse throws an error.
-- [onMessage](/docs//clientEvents/onMessage.md): Executed on all message events after proper authentication (or disable of authentication).
+- [onAuthResponse](/docs/clientEvents/onAuthResponse.md): Executed when the first message is received, expects such message to be a confirmation of success or not.
+- [onAuthSuccess](/docs/clientEvents/onAuthSuccess.md): Executed after onAuthResponse runs without errors.
+- [onAuthFailure](/docs/clientEvents/onAuthFailure.md): Executed when onAuthResponse throws an error.
+- [onMessage](/docs/clientEvents/onMessage.md): Executed on all message events after proper authentication (or disable of authentication).
 
 ### Public Attributes
 
@@ -42,11 +42,12 @@ These options are added to the constructor together with the options object abov
 
 import Client from "socket-actions/client";
 
-const onAuthSuccess = () => {
-    client.sendAction("hello", { target: 'World' });
-}
-
-const client = new Client("ws://localhost:3000", { auth: '42', onAuthSuccess });
+const client = new Client("ws://localhost:3000", {
+    auth: '42',
+    onAuthSuccess: () => {
+        client.sendAction("hello", { target: 'World' });
+    }
+});
 
 // Assuming '42' is a valid authentication for the server, the server in this example will run the action called "hello" giving it { target: 'World' } as a parameter.
 ```
