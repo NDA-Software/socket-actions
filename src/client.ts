@@ -65,7 +65,7 @@ export default class Client extends WebSocket {
         const { _authentication: authentication } = this;
 
         if (authentication !== undefined)
-            await this.tryAuth();
+            this.tryAuth();
         else
             this.enableMessageReceiver();
     }
@@ -106,7 +106,7 @@ export default class Client extends WebSocket {
         return this._isAuthenticated;
     }
 
-    public async tryAuth(authentication?: any): Promise<void> {
+    public tryAuth(authentication?: any): void {
         if (authentication !== undefined)
             this._authentication = authentication;
 
