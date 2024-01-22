@@ -1,9 +1,9 @@
-import type WebSocket from 'ws';
+import type { Server } from 'ws';
 
 export type FactoryPromise = (...args: any[]) => Promise<void>;
 export type FactoryFunction = (...args: any[]) => void;
 
-const listenerFactory = (ctx: WebSocket.Server | WebSocket, socket: ClientSocket | null, callback: FactoryPromise): FactoryFunction => {
+const listenerFactory = (ctx: Server | WebSocket, socket: ClientSocket | null, callback: FactoryPromise): FactoryFunction => {
     return (...args: any[]) => {
         if (socket !== null)
             args = [socket, ...args];

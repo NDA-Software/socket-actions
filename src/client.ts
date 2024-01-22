@@ -1,5 +1,3 @@
-import WebSocket from 'ws';
-
 import listenerFactory, { type FactoryFunction } from './helpers/listenerFactory';
 
 export type onOpen = () => Promise<void>;

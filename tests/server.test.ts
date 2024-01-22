@@ -1,3 +1,4 @@
+import WebSocket from 'ws';
 import { validate as uuidValidate } from 'uuid';
 
 import Socket, {
@@ -15,8 +16,6 @@ import HitMonster from '../mockActions/hitMonster';
 import Mistake from '../mockActions/mistake';
 import TestUserData from '../mockActions/testUserData';
 
-import Client from '../src/client';
-
 const actions: Record<string, Action> = {
     failToHitMonster: new FailToHitMonster(),
     getId: new GetId(),
@@ -30,6 +29,8 @@ let unsafeSocket: Socket | null = null;
 let socketServer: Socket | null = null;
 
 let connectionCounter = 0;
+
+const connect = (): WebSocket => new WebSocket('ws://localhost:3000');
 
 const onConnection = async (): Promise<void> => {
     connectionCounter++;
@@ -76,112 +77,130 @@ beforeAll(() => {
 
 describe('Socket:', () => {
     test('Testing onConnection...', (done) => {
-        const con = new Client({
-            authentication: 'trustMe!',
-            onOpen: async () => {
-                expect(connectionCounter).toBe(1);
+        const con = connect();
 
-                con.close();
+        con.onopen = () => {
+            expect(connectionCounter).toBe(1);
 
-                done();
-            }
-        });
+            con.close();
+
+            done();
+        };
     });
 
-    let messageCounter: number = 0;
-
     test('Testing onAuth...', (done) => {
-        const con = new Client({
-            authentication: 'notTrusted',
-            onAuthFailure: async ({ data: message }: MessageEvent) => {
-                switch (messageCounter) {
-                    case 0: // Expected failure of authentication.
-                        expect(message).toBe('Failed Authentication');
+        const con = connect();
 
-                        con.sendAction('hello', { name: 'World' });
-                        break;
+        con.onopen = () => {
+            con.send('notTrusted');
+        };
 
-                    case 1: // Expected failure of action due to lack of previous authentication.
-                        expect(message).toBe('Failed Authentication');
+        let messageCounter: number = 0;
+        con.onmessage = (message) => {
+            switch (messageCounter) {
+                case 0: // Expected failure of authentication.
+                    expect(message.data).toBe('Failed Authentication');
 
-                        con.tryAuth('trustMe!');
-                        break;
-                }
+                    con.send(JSON.stringify({
+                        path: 'hello',
+                        data: { name: 'World' }
+                    }));
+                    break;
 
-                messageCounter++;
-            },
-            onOpen: async () => { // Expect authentication success.
-                con.sendAction('hello', { name: 'World' });
+                case 1: // Expected failure of action due to lack of previous authentication.
+                    expect(message.data).toBe('Failed Authentication');
 
-                messageCounter++;
-            },
-            onMessage: async ({ data: message }: MessageEvent) => {
-                switch (messageCounter) {
-                    case 3: // Expect action to be executed.
-                        expect(message).toBe('Hello World!');
+                    con.send('trustMe!');
+                    break;
 
-                        con.sendAction('getId');
-                        break;
+                case 2: // Expect authentication success.
+                    expect(message.data).toBe('Authenticated');
 
-                    case 4:
-                        expect(
-                            uuidValidate(message)
-                        ).toBe(true);
+                    con.send(JSON.stringify({
+                        path: 'hello',
+                        data: { name: 'World' }
+                    }));
+                    break;
 
-                        con.close();
-                        done();
-                        break;
-                }
+                case 3: // Expect action to be executed.
+                    expect(message.data).toBe('Hello World!');
 
-                messageCounter++;
+                    con.send(JSON.stringify({
+                        path: 'getId'
+                    }));
+                    break;
+
+                case 4:
+                    expect(
+                        uuidValidate(message.data as string)
+                    ).toBe(true);
+
+                    con.close();
+                    done();
+                    break;
             }
-        });
+
+            messageCounter++;
+        };
     });
 
     test('Testing onMessage...', (done) => {
+        const con = connect();
+
+        con.onopen = () => {
+            con.send('trustMe!');
+        };
+
         let messageCounter: number = 0;
+        con.onmessage = (message) => {
+            switch (messageCounter) {
+                case 0:
+                    con.send(JSON.stringify({ path: 'hitMonster' }));
+                    break;
 
-        const con = new Client({
-            authentication: 'trustMe!',
-            onOpen: async () => {
-                con.sendAction('hitMonster');
-            },
-            onMessage: async ({ data: message }) => {
-                switch (messageCounter) {
-                    case 0: // Expect for attack to have failed.
-                        expect(message).toBe('You missed! Please wait for the bald guy\'s help.');
+                case 1: // Expect for attack to have failed.
+                    expect(message.data).toBe('You missed! Please wait for the bald guy\'s help.');
 
-                        con.sendAction('hitMonster');
-                        break;
+                    con.send(JSON.stringify({ path: 'hitMonster' }));
+                    break;
 
-                    case 1: // Expect action to be executed.
-                        expect(message).toBe('ONE PUNCH!');
+                case 2: // Expect action to be executed.
+                    expect(message.data).toBe('ONE PUNCH!');
 
-                        con.close();
-                        done();
-                        break;
-                }
-
-                messageCounter++;
+                    con.close();
+                    done();
+                    break;
             }
-        }
-        );
+
+            messageCounter++;
+        };
     });
 
     test('Testing onError...', (done) => {
-        const con = new Client({
-            authentication: 'trustMe!',
-            onOpen: async () => {
-                con.sendAction('mistake');
-            },
-            onMessage: async ({ data: message }) => {
-                con.close();
+        const con = connect();
 
-                expect(message).toBe('You were defeated.');
+        con.onopen = () => {
+            con.send('trustMe!');
+        };
 
-                done();
+        let firstMessage = true;
+        con.onmessage = (message) => {
+            if (firstMessage) {
+                firstMessage = false;
+
+                con.send(JSON.stringify({
+                    path: 'mistake'
+                }));
+
+                return;
             }
-        });
+
+            con.close();
+
+            expect(message.data).toBe('You were defeated.');
+
+            done();
+        };
     });
 
     test('Testing onClose...', (done) => {
@@ -195,19 +214,22 @@ describe('Socket:', () => {
     });
 
     test('Testing unsafe socket and actionsPath...', (done) => {
-        const con = new Client({
-            url: 'ws://localhost:3001',
-            onOpen: async () => {
-                con.sendAction('hello');
-            },
-            onMessage: async ({ data: message }) => {
-                expect(message).toBe('Hello from module.exports!');
+        const con = new WebSocket('ws://localhost:3001');
 
-                con.close();
+        con.onopen = () => {
+            con.send(JSON.stringify({
+                path: 'hello'
 
-                done();
-            }
-        });
+            }));
+        };
+
+        con.onmessage = (message) => {
+            expect(message.data).toBe('Hello from module.exports!');
+
+            con.close();
+
+            done();
+        };
     });
 });
 
