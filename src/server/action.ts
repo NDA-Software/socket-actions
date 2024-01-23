@@ -1,3 +1,11 @@
+import { type DataType, type ClientSocket } from './socket';
+
+export type ActionParameters = {
+    socket: ClientSocket
+    userData: DataType,
+    data: DataType,
+}
+
 export default abstract class Action {
     async prepareAction (): Promise<void> {}
 

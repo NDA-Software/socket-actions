@@ -1,21 +1,21 @@
 /* AUTO-GENERATED, DO NOT EDIT MANUALLY */
-import client, * as clientNamed from './client';
-import helpers, * as helpersNamed from './helpers';
-import server, * as serverNamed from './server';
+import Client, * as ClientNamed from './client';
+import Helpers, * as HelpersNamed from './helpers';
+import Server, * as ServerNamed from './server';
 
-export { client };
-export { helpers };
-export { server };
+export { Client };
+export { Helpers };
+export { Server };
 
 export * from './client';
 export * from './helpers';
 export * from './server';
 
 export default {
-    client,
-    helpers,
-    server,
-    ...clientNamed,
-    ...helpersNamed,
-    ...serverNamed
+    Client,
+    Helpers,
+    Server,
+    ...ClientNamed,
+    ...HelpersNamed,
+    ...ServerNamed
 };

@@ -1,4 +1,4 @@
-import Action from '../src/server/action';
+import Action, { type ActionParameters } from '../src/server/action';
 
 export default class Mistake extends Action {
     override async onRun(_params: ActionParameters): Promise<void> {

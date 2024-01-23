@@ -1,4 +1,5 @@
 import type { Server } from 'ws';
+import { type ClientSocket } from '../server/socket';
 
 export type FactoryPromise = (...args: any[]) => Promise<void>;
 export type FactoryFunction = (...args: any[]) => void;

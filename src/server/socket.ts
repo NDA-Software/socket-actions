@@ -9,6 +9,17 @@ import listenerFactory from '../helpers/listenerFactory';
 import { executeOnFiles } from 'ts-cornucopia/file';
 import type Action from './action';
 
+export type DataType = Record<string, any>;
+
+export type ClientSocket = ws & {
+    userData: DataType
+};
+
+export type MessageObject = {
+    path: string,
+    data: DataType
+};
+
 export type onConnection = (socket: ClientSocket, req: IncomingMessage) => Promise<void>;
 
 export type onAuth = (socket: ClientSocket, message: Buffer) => Promise<void>;

@@ -90,8 +90,7 @@ const preserveModules = (Object.keys(exports)).length > 1;
 const configCjs = {
     output: [{}],
     plugins: [
-        indexer('src', { ignoredFiles: 'global.d.ts' }),
-        indexer('src/server', { nameCasing: 'PascalCase' })
+        indexer('src', { nameCasing: 'PascalCase', recursive: true })
     ]
 };
 
@@ -205,7 +204,8 @@ if (hasTypes) {
             file: 'dist/types/helpers.d.ts',
             format: 'es'
         }],
-        plugins: [dts()]
+        plugins: [dts()],
+        external: ['http']
     });
 
     config.push({
