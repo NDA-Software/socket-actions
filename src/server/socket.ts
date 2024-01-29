@@ -20,6 +20,8 @@ export type MessageObject = {
     data: DataType
 };
 
+type sendMessageToAllOptions = { exceptions: ClientSocket[] | string[] };
+
 export type onConnection = (socket: ClientSocket, req: IncomingMessage) => Promise<void>;
 
 export type onAuth = (socket: ClientSocket, message: Buffer) => Promise<void>;
@@ -71,17 +73,19 @@ const emptyPromiseFunction = async (): Promise<void> => {};
 export default class Socket extends ws.Server {
     public readonly server: Server | undefined;
 
-    private readonly onConnection: onConnection;
-    private readonly onAuth: onAuth;
-    private readonly onAuthSuccess: onAuthSuccess;
-    private readonly onAuthFailure: onAuthFailure;
-    private readonly onClose: onClose;
-    private readonly onError: onError;
-    private readonly onMessage: onMessage;
+    protected readonly onConnection: onConnection;
+    protected readonly onAuth: onAuth;
+    protected readonly onAuthSuccess: onAuthSuccess;
+    protected readonly onAuthFailure: onAuthFailure;
+    protected readonly onClose: onClose;
+    protected readonly onError: onError;
+    protected readonly onMessage: onMessage;
 
-    private readonly Actions: Record<string, Action>;
+    protected readonly Actions: Record<string, Action>;
 
-    private readonly disableAuthentication: boolean;
+    protected readonly disableAuthentication: boolean;
+
+    protected readonly _activeClients: ClientSocket[] = [];
 
     constructor(options: SocketOptions) {
         const {
@@ -168,7 +172,7 @@ export default class Socket extends ws.Server {
             console.warn('onAuth event both added and supressed by disableAuthentication option.');
     }
 
-    private async prepareAllActions (): Promise<void> {
+    protected async prepareAllActions (): Promise<void> {
         const promises: Array<Promise<void>> = [];
 
         for (const key in this.Actions) {
@@ -180,15 +184,21 @@ export default class Socket extends ws.Server {
         await Promise.all(promises);
     }
 
-    private async connecting (socket: ClientSocket, req: IncomingMessage): Promise<void> {
+    protected async connecting (socket: ClientSocket, req: IncomingMessage): Promise<void> {
         try {
             await this.onConnection(socket, req);
 
             socket.on('error', listenerFactory(this, socket, this.reportingError));
 
-            if (this.disableAuthentication)
+            if (this.disableAuthentication) {
                 socket.on('message', listenerFactory(this, socket, this.receivingMessage));
-            else
+
+                socket.userData = {
+                    id: uuid()
+                };
+
+                this._activeClients.push(socket);
+            } else
                 socket.on('message', listenerFactory(this, socket, this.authenticating));
 
             socket.on('close', listenerFactory(this, socket, this.closing));
@@ -199,7 +209,7 @@ export default class Socket extends ws.Server {
         }
     }
 
-    private async authenticating (socket: ClientSocket, message: Buffer): Promise<void> {
+    protected async authenticating (socket: ClientSocket, message: Buffer): Promise<void> {
         try {
             await this.onAuth(socket, message);
 
@@ -208,6 +218,8 @@ export default class Socket extends ws.Server {
 
             if (socket.userData.id === undefined)
                 socket.userData.id = uuid();
+
+            this._activeClients.push(socket);
         } catch (err) {
             await this.onAuthFailure(socket, err as Error, message);
 
@@ -221,7 +233,7 @@ export default class Socket extends ws.Server {
         await this.onAuthSuccess(socket, message);
     }
 
-    private async receivingMessage (socket: ClientSocket, message: string): Promise<void> {
+    protected async receivingMessage (socket: ClientSocket, message: string): Promise<void> {
         try {
             const messageObject = JSON.parse(message) as MessageObject;
 
@@ -241,17 +253,51 @@ export default class Socket extends ws.Server {
         }
     }
 
-    private async reportingError (socket: ClientSocket, err: Error): Promise<void> {
+    protected async reportingError (socket: ClientSocket, err: Error): Promise<void> {
         await this.onError(socket, err);
     }
 
-    private async closing (socket: ClientSocket): Promise<void> {
+    protected async closing (socket: ClientSocket): Promise<void> {
         await this.onClose(socket);
+
+        const socketIndex = this._activeClients.findIndex((item) => item.userData.id === socket.userData.id);
+
+        if (socketIndex !== -1)
+            this._activeClients.splice(socketIndex, 1);
     }
 
     public override close(cb?: ((err?: Error | undefined) => void) | undefined): void {
         super.close(cb);
 
         this.server?.close();
+    }
+
+    public get activeClients (): DataType[] {
+        return this._activeClients.map(item => item.userData);
+    }
+
+    public sendMessage (socket: ClientSocket, data: DataType): void {
+        socket.send(JSON.stringify(data));
+    }
+
+    public sendMessageById (id: string, data: DataType): void {
+        const socket = this._activeClients.find(item => item.userData.id === id);
+
+        if (socket !== undefined)
+            this.sendMessage(socket, data);
+    }
+
+    public sendMessageToAll (data: DataType, { exceptions = [] }: sendMessageToAllOptions): void {
+        if (typeof exceptions[0] === 'object')
+            exceptions = exceptions.map((item) => {
+                return (item as ClientSocket).userData.id;
+            });
+
+        for (const client of this._activeClients) {
+            if (exceptions.includes(client.userData.id))
+                continue;
+
+            this.sendMessage(client, data);
+        }
     }
 }
