@@ -24,6 +24,7 @@ These options are added to the constructor together with the options object abov
 - [onOpen](/docs/clientEvents/onOpen.md): Executed after onAuthResponse runs without errors.
 - [onAuthFailure](/docs/clientEvents/onAuthFailure.md): Executed when onAuthResponse throws an error.
 - [onMessage](/docs/clientEvents/onMessage.md): Executed on all message events after proper authentication (or disable of authentication).
+- [onClose](/docs/clientEvents/onClose.md): Executed when the connection is closed by the server.
 
 ### Public Attributes
 
