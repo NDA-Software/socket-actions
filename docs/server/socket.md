@@ -36,10 +36,15 @@ These options are added to the constructor together with the options object abov
 ### Public Attributes
 
 - server (Readonly): This will keep the http server used. If not provided within ServerOptions, this will store the Express instance created.
+- activeClients: Gets an array of all userData from the active clientSockets.
 
 ### Public Methods
 
 - close: This closes both the socket and the http server.
+- sendMessage (socket: ClientSocket, data: DataType | string): Sends data to clientSocket passed.
+- sendMessageById (id: string, data: DataType): Finds the clientSocket by the id in userData and then sends data to it.
+- sendMessageToAll (data: DataType, options: sendMessageToAllOptions): Sends data to all activeClients. Options:
+  - exceptions (string[]): Lists ids that will be filtered out of the active clients to send the message.
 
 ## Usage:
 
