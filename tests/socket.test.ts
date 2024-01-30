@@ -7,7 +7,7 @@ import Socket, {
     type onMessage as onMessageType
 } from '../src/server/socket';
 
-import { type Action } from '../src';
+import { type Action } from '../src/server';
 
 import FailToHitMonster from '../mockActions/failToHitMonster';
 import GetId from '../mockActions/getId';

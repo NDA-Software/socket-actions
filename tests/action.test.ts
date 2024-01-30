@@ -1,6 +1,6 @@
 import WebSocket from 'ws';
 
-import { Socket, type onAuth as onAuthType } from '../src/server';
+import Socket, { type onAuth as onAuthType } from '../src/server/socket';
 
 import ShootLightning from '../mockActions/shootLightning';
 
