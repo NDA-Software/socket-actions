@@ -276,18 +276,21 @@ export default class Socket extends ws.Server {
         return this._activeClients.map(item => item.userData);
     }
 
-    public sendMessage (socket: ClientSocket, data: DataType): void {
-        socket.send(JSON.stringify(data));
+    public sendMessage (socket: ClientSocket, data: DataType | string): void {
+        if (typeof data !== 'string')
+            data = JSON.stringify(data);
+
+        socket.send(data);
     }
 
-    public sendMessageById (id: string, data: DataType): void {
+    public sendMessageById (id: string, data: DataType | string): void {
         const socket = this._activeClients.find(item => item.userData.id === id);
 
         if (socket !== undefined)
             this.sendMessage(socket, data);
     }
 
-    public sendMessageToAll (data: DataType, { exceptions = [] }: sendMessageToAllOptions): void {
+    public sendMessageToAll (data: DataType | string, { exceptions = [] }: sendMessageToAllOptions): void {
         if (typeof exceptions[0] === 'object')
             exceptions = exceptions.map((item) => {
                 return (item as ClientSocket).userData.id;

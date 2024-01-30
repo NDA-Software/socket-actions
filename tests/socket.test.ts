@@ -14,6 +14,8 @@ import GetId from '../mockActions/getId';
 import Hello from '../mockActions/hello';
 import HitMonster from '../mockActions/hitMonster';
 import Mistake from '../mockActions/mistake';
+import SetId from '../mockActions/setId';
+import TestCommunication from '../mockActions/testCommunication';
 import TestUserData from '../mockActions/testUserData';
 
 const actions: Record<string, Action> = {
@@ -22,6 +24,8 @@ const actions: Record<string, Action> = {
     hello: new Hello(),
     hitMonster: new HitMonster(),
     mistake: new Mistake(),
+    setId: new SetId(),
+    testCommunication: new TestCommunication(),
     testUserData: new TestUserData()
 };
 
@@ -229,6 +233,88 @@ describe('Socket:', () => {
             con.close();
 
             done();
+        };
+    });
+
+    test('Testing messaging between clients through actions...', (done) => {
+        const con = connect();
+        const con2 = connect();
+
+        con.onopen = () => {
+            con.send('trustMe!');
+        };
+
+        con2.onopen = () => {
+            con2.send('trustMe!');
+        };
+
+        let con1Counter = 0;
+        con.onmessage = ({ data }) => {
+            switch (con1Counter) {
+                case 0:
+                    con.send(JSON.stringify({
+                        path: 'setId',
+                        data: {
+                            id: 1
+                        }
+                    }));
+
+                    break;
+
+                case 1:
+                    expect(data).toBe('Ok');
+
+                    con.send(JSON.stringify({
+                        path: 'testCommunication',
+                        data: {
+                            toId: 2,
+                            message: 'Hi!'
+                        }
+                    }));
+
+                    break;
+
+                case 2:
+                    expect(data).toBe('Hello!');
+                    con.close();
+
+                    done();
+                    break;
+            }
+
+            con1Counter++;
+        };
+
+        let con2Counter = 0;
+        con2.onmessage = ({ data }) => {
+            switch (con2Counter) {
+                case 0:
+                    con2.send(JSON.stringify({
+                        path: 'setId',
+                        data: {
+                            id: 2
+                        }
+                    }));
+
+                    break;
+
+                case 1:
+                    expect(data).toBe('Ok');
+                    break;
+
+                case 2:
+                    con2.send(JSON.stringify({
+                        path: 'testCommunication',
+                        data: {
+                            toId: 1,
+                            message: 'Hello!'
+                        }
+                    }));
+
+                    con2.close();
+            }
+
+            con2Counter++;
         };
     });
 });
