@@ -1,3 +1,4 @@
+import type Socket from './socket';
 import { type DataType, type ClientSocket } from './socket';
 
 export type ActionParameters = {
@@ -7,7 +8,11 @@ export type ActionParameters = {
 }
 
 export default abstract class Action {
-    async prepareAction (): Promise<void> {}
+    protected server: Socket | null = null;
+
+    async prepareAction (server: Socket): Promise<void> {
+        this.server = server;
+    }
 
     protected async onCheckPermissions (_parameters: ActionParameters): Promise<void> {}
 

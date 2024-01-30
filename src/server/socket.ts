@@ -178,7 +178,7 @@ export default class Socket extends ws.Server {
         for (const key in this.Actions) {
             const action = this.Actions[key] as Action;
 
-            promises.push(action.prepareAction());
+            promises.push(action.prepareAction(this));
         }
 
         await Promise.all(promises);
