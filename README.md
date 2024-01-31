@@ -28,11 +28,11 @@ The objective is to create an easy to use with little to no configuration WebSoc
   - userData (DataType): User-specific data.
   - data (DataType): Data sent from user.
 
+## Example:
+
+- [Checklist](https://github.com/NDA-Software/socket-actions-checklist)
+
 ## Roadmap:
-
-- Before next update:
-
-  - Create simple open-source project using Next.js and Docker to show usage of this package.
 
 - 2.0.0:
 
