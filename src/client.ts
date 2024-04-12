@@ -8,6 +8,7 @@ export type clientOptions = {
     url?: string,
     authentication?: any,
     connectionTryLimit?: number,
+    secondsBetweenRetries?: number,
     protocols?: string | string[],
     onOpen?: onOpen,
     onClose?: onClose,
@@ -23,7 +24,8 @@ const defaultOnAuthResponse = async ({ data }: MessageEvent): Promise<void> => {
 
 const defaultOptions = {
     url: 'ws://localhost:3000',
-    connectionTryLimit: 0
+    connectionTryLimit: 0,
+    secondsBetweenRetries: 5
 };
 
 export default class Client {
@@ -42,14 +44,16 @@ export default class Client {
     private readonly onClose: onClose | undefined;
     private readonly onAuthFailure: messageReceiver | undefined;
 
-    private readonly connectionTryLimit: number;
     private connectionTries = 0;
+    private readonly connectionTryLimit: number;
+    private readonly secondsBetweenRetries: number;
 
     private _isAuthenticated = false;
     private _isConnected = false;
 
     constructor(options: clientOptions = {}) {
-        this.connectionTryLimit = options.connectionTryLimit ?? 0;
+        this.connectionTryLimit = options.connectionTryLimit ?? defaultOptions.secondsBetweenRetries;
+        this.secondsBetweenRetries = options.secondsBetweenRetries ?? defaultOptions.secondsBetweenRetries;
 
         let { authentication } = options;
 
@@ -104,13 +108,24 @@ export default class Client {
         this.enableMessageReceiver();
 
         this._isConnected = true;
+        this.connectionTries = 0;
     }
 
     private async closing(): Promise<void> {
         this._isConnected = false;
         if (this.connectionTries < this.connectionTryLimit) {
-            // TO-DO: In update 2.0 add the option to auto-reconnect in here.
+            this.connectionTries++;
+
+            console.log(`Connection to server lost. Reconnecting in ${this.secondsBetweenRetries} seconds...`);
+            console.log(`(Attempt ${this.connectionTries} of ${this.connectionTryLimit})`);
+
+            setTimeout(() => {
+                this.reconnect();
+            }, this.secondsBetweenRetries * 1000);
+
+            return;
         }
+
         if (this.onClose !== undefined)
             await this.onClose();
     }
