@@ -30,7 +30,8 @@ const actions: Record<string, Action> = {
 };
 
 let unsafeSocket: Socket | null = null;
-let socketServer: Socket | null = null;
+let safeSocket: Socket | null = null;
+let thirdSocket: Socket | null = null;
 
 let connectionCounter = 0;
 
@@ -62,8 +63,8 @@ const onError: onErrorType = async (socket, err) => {
     socket.send(err.message);
 };
 
-beforeAll(() => {
-    socketServer = new Socket({
+beforeAll(async () => {
+    safeSocket = new Socket({
         actions,
         onConnection,
         onAuth,
@@ -72,11 +73,27 @@ beforeAll(() => {
         onError
     });
 
+    await safeSocket.start();
+
     unsafeSocket = new Socket({
         actionsPath: './mockActions/pathTest',
         disableAuthentication: true,
-        port: 3001
+        serverOptions: {
+            port: 3001
+        }
     });
+
+    await unsafeSocket.start();
+
+    thirdSocket = new Socket({
+        actionsPath: './mockActions/pathTest',
+        disableAuthentication: true,
+        serverOptions: {
+            port: 3002
+        }
+    });
+
+    await thirdSocket.start();
 });
 
 describe('Socket:', () => {
@@ -317,10 +334,34 @@ describe('Socket:', () => {
             con2Counter++;
         };
     });
+
+    test('Testing restart...', (done) => {
+        let con = new WebSocket('ws://localhost:3002');
+
+        con.onopen = () => {
+            const func = async (): Promise<void> => {
+                con.close();
+
+                await thirdSocket?.restart();
+
+                con = new WebSocket('ws://localhost:3002');
+
+                con.onopen = () => {
+                    con.close();
+
+                    done();
+                };
+            };
+
+            void func();
+        };
+    });
 });
 
 afterAll(() => {
-    socketServer?.close();
+    safeSocket?.close();
 
     unsafeSocket?.close();
+
+    thirdSocket?.close();
 });

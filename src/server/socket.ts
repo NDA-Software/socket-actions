@@ -35,8 +35,6 @@ export type onError = (socket: ClientSocket, err: Error) => Promise<void>;
 
 export type SocketOptions = {
     serverOptions?: ServerOptions
-    url?: string
-    port?: number,
     actionsPath?: string,
     actions?: Record<string, Action>,
     disableAuthentication?: boolean,
@@ -50,8 +48,6 @@ export type SocketOptions = {
 }
 
 const defaultOptions = {
-    url: 'http://localhost',
-    port: 3000,
     actionsPath: './actions',
     disableAuthentication: false
 };
@@ -70,8 +66,8 @@ const onAuthFailureDefault = async (socket: ClientSocket): Promise<void> => {
 
 const emptyPromiseFunction = async (): Promise<void> => {};
 
-export default class Socket extends ws.Server {
-    public readonly server: Server | undefined;
+export default class Socket {
+    protected _server: Server | undefined;
 
     protected readonly onConnection: onConnection;
     protected readonly onAuth: onAuth;
@@ -87,10 +83,12 @@ export default class Socket extends ws.Server {
 
     protected readonly _activeClients: ClientSocket[] = [];
 
+    private wsInstance: ws.Server | undefined;
+
+    private readonly serverOptions: ServerOptions;
+
     constructor(options: SocketOptions) {
         const {
-            url,
-            port,
             actionsPath,
             actions,
             disableAuthentication,
@@ -108,22 +106,7 @@ export default class Socket extends ws.Server {
         if (serverOptions === undefined)
             serverOptions = {};
 
-        const { server } = serverOptions;
-
-        if (server === undefined) {
-            const app = express();
-
-            app.use(bodyParser.json());
-
-            app.use(cors({
-                origin: url,
-                optionsSuccessStatus: 200
-            }));
-
-            serverOptions.server = app.listen(port);
-        }
-
-        super(serverOptions);
+        this.serverOptions = serverOptions;
 
         this.Actions = actions ?? {};
 
@@ -150,8 +133,6 @@ export default class Socket extends ws.Server {
             }
         }
 
-        this.server = serverOptions.server;
-
         this.onConnection = onConnection ?? emptyPromiseFunction;
         this.onAuth = onAuth ?? authenticationNotImplemented;
         this.onAuthSuccess = onAuthSuccess ?? onAuthSuccessDefault;
@@ -160,16 +141,52 @@ export default class Socket extends ws.Server {
         this.onError = onError ?? emptyPromiseFunction;
         this.onMessage = onMessage ?? emptyPromiseFunction;
 
-        this.prepareAllActions().then(() => {
-            this.on('connection', listenerFactory(this, null, this.connecting));
-        }).catch((err) => {
-            throw new Error(err);
-        });
-
         this.disableAuthentication = disableAuthentication;
 
         if (disableAuthentication && onAuth !== undefined)
             console.warn('onAuth event both added and supressed by disableAuthentication option.');
+    }
+
+    public async start(): Promise<void> {
+        const { serverOptions } = this;
+
+        const {
+            server,
+            host = 'http://localhost',
+            port = 3000
+        } = serverOptions;
+
+        delete serverOptions.host;
+        delete serverOptions.port;
+
+        if (server === undefined) {
+            const app = express();
+
+            app.use(bodyParser.json());
+
+            app.use(cors({
+                origin: host,
+                optionsSuccessStatus: 200
+            }));
+
+            serverOptions.server = app.listen(port);
+        }
+
+        this._server = serverOptions.server;
+
+        this.wsInstance = new ws.Server(serverOptions);
+
+        this.prepareAllActions().then(() => {
+            this.wsInstance?.on('connection', listenerFactory(this, null, this.connecting));
+        }).catch((err) => {
+            throw new Error(err);
+        });
+    }
+
+    public async restart(): Promise<void> {
+        this.closeSocket();
+
+        await this.start();
     }
 
     protected async prepareAllActions (): Promise<void> {
@@ -266,14 +283,25 @@ export default class Socket extends ws.Server {
             this._activeClients.splice(socketIndex, 1);
     }
 
-    public override close(cb?: ((err?: Error | undefined) => void) | undefined): void {
-        super.close(cb);
+    public closeSocket(cb?: ((err?: Error | undefined) => void) | undefined): void {
+        this.wsInstance?.close(cb);
+    }
 
-        this.server?.close();
+    public close(
+        socketCallback?: ((err?: Error | undefined) => void) | undefined,
+        expressCallback?: ((err?: Error | undefined) => void)
+    ): void {
+        this.closeSocket(socketCallback);
+
+        this._server?.close(expressCallback);
     }
 
     public get activeClients (): DataType[] {
         return this._activeClients.map(item => item.userData);
+    }
+
+    public get server (): Server | undefined {
+        return this._server;
     }
 
     public sendMessage (socket: ClientSocket, data: DataType | string): void {
