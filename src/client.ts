@@ -26,8 +26,12 @@ const defaultOptions = {
     connectionTryLimit: 0
 };
 
-export default class Client extends WebSocket {
+export default class Client {
     private _authentication: any;
+    private _socket: WebSocket | null = null;
+
+    private readonly url: string;
+    private readonly protocols: string | string[] | undefined;
 
     private readonly preparedOnAuthResponse: FactoryFunction;
     private readonly preparedOnMessageResponse: FactoryFunction;
@@ -45,8 +49,6 @@ export default class Client extends WebSocket {
     private _isConnected = false;
 
     constructor(options: clientOptions = {}) {
-        super(options.url ?? defaultOptions.url, options.protocols);
-
         this.connectionTryLimit = options.connectionTryLimit ?? 0;
 
         let { authentication } = options;
@@ -65,15 +67,31 @@ export default class Client extends WebSocket {
         this.onAuthFailure = options.onAuthFailure;
         this.onMessage = options.onMessage;
 
-        this.addEventListener('open', listenerFactory(this, null, this.opening));
-        this.addEventListener('close', listenerFactory(this, null, this.closing));
+        this.url = options.url ?? defaultOptions.url;
+        this.protocols = options.protocols;
+
+        this.connect();
+    }
+
+    private connect(): void {
+        this._socket = new WebSocket(this.url, this.protocols);
+
+        this._socket.addEventListener('open', listenerFactory(this, null, this.opening));
+        this._socket.addEventListener('close', listenerFactory(this, null, this.closing));
+    }
+
+    public reconnect(): void {
+        if (this._isConnected)
+            this.close();
+
+        this.connect();
     }
 
     private async opening(): Promise<void> {
         const { _authentication: authentication } = this;
 
         if (authentication !== undefined) {
-            this.addEventListener('message', this.preparedOnAuthResponse);
+            this._socket?.addEventListener('message', this.preparedOnAuthResponse);
 
             this.tryAuth();
 
@@ -90,23 +108,21 @@ export default class Client extends WebSocket {
 
     private async closing(): Promise<void> {
         this._isConnected = false;
-
         if (this.connectionTries < this.connectionTryLimit) {
             // TO-DO: In update 2.0 add the option to auto-reconnect in here.
         }
-
         if (this.onClose !== undefined)
             await this.onClose();
     }
 
-    public override close(code?: number | undefined, reason?: string | undefined): void {
+    public close(code?: number | undefined, reason?: string | undefined): void {
         this.connectionTries = this.connectionTryLimit;
 
-        super.close(code, reason);
+        this._socket?.close(code, reason);
     }
 
     private enableMessageReceiver (): void {
-        this.addEventListener('message', this.preparedOnMessageResponse);
+        this._socket?.addEventListener('message', this.preparedOnMessageResponse);
     }
 
     private async authResponse(message: MessageEvent): Promise<void> {
@@ -119,7 +135,7 @@ export default class Client extends WebSocket {
             if (this.onOpen !== undefined)
                 await this.onOpen();
 
-            this.removeEventListener('message', this.preparedOnAuthResponse);
+            this._socket?.removeEventListener('message', this.preparedOnAuthResponse);
 
             this.enableMessageReceiver();
         } catch (err) {
@@ -145,6 +161,10 @@ export default class Client extends WebSocket {
         return this._isConnected;
     }
 
+    public get socket(): WebSocket | null {
+        return this._socket;
+    }
+
     public tryAuth(authentication?: any): void {
         if (this.isAuthenticated) {
             console.warn('Already logged in. Execution of tryAuth blocked.');
@@ -155,7 +175,7 @@ export default class Client extends WebSocket {
         if (authentication !== undefined)
             this._authentication = authentication;
 
-        this.send(this._authentication);
+        this._socket?.send(this._authentication);
     }
 
     public sendAction(path: string, data?: Record<string, any>): void {
@@ -168,6 +188,6 @@ export default class Client extends WebSocket {
 
         const message = JSON.stringify(messageObj);
 
-        this.send(message);
+        this._socket?.send(message);
     }
 }
