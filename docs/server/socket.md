@@ -2,7 +2,7 @@
 
 ## Description
 
-This class extends WebSocket.Server and adds wrappers to some of the relevant WebSocket.Server's events adding routing to the action classes.
+This class uses WebSocket.Server to create an event-driven server.
 
 ## Constructor
 
@@ -10,9 +10,7 @@ This class extends WebSocket.Server and adds wrappers to some of the relevant We
 
 ## Options
 
-- serverOptions: This is a passthrough object that accepts the same options as the constructor of WebSocket.Server and therefore is mostly unchanged. Except that if no "server" option is added to this object, an express instance will be run and added to this. Therefore this is not required to be set for the socket to run.
-- url (Default: "http://localhost"): Url in which the express server and socket will be run.
-- port (Default: 3000): Port in which the express server and socket will be run.
+- serverOptions: This is a passthrough object that accepts the same options as the constructor of WebSocket.Server and therefore is mostly unchanged. Except that if no "server" option is added to this object, an express instance will be run and added to this. Therefore this is not required to be set for the socket to run. This carries the port and host (previously url in Options) to generate the http server.
 - actionsPath (Default: "./actions"): String of the path in which actions will be dynamically imported. In this folder it is expected that all files use "module.exports = " for exporting a class that extends Action class.
 - actions (Default: undefined): Alternative to giving a path to the actions folder, you can also import and instantiate the actions and supply them in a structure of DataType being the string the path that will be used to call the action from the client.
 - disableAuthentication (Default: false): If set to true, this option will prevent onAuth to be executed, making the first message go directly to onMessage.
@@ -40,6 +38,9 @@ These options are added to the constructor together with the options object abov
 
 ### Public Methods
 
+- start: This starts the WebSocket with the given configurations given during the constructor.
+- restart: This closes the webSocket (not the http server) and runs start again.
+- closeSocket: This closes only the WebSocket instance without touching the http server.
 - close: This closes both the socket and the http server.
 - sendMessage (socket: ClientSocket, data: DataType | string): Sends data to clientSocket passed.
 - sendMessageById (id: string, data: DataType): Finds the clientSocket by the id in userData and then sends data to it.
@@ -53,7 +54,9 @@ These options are added to the constructor together with the options object abov
 
 import { Socket } from "socket-actions/server";
 
-new Socket();
+const server = new Socket();
+
+server.start();
 
 // Express listening at http://localhost:3000
 // SocketActions listening at ws://localhost:3000

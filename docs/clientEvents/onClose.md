@@ -11,15 +11,12 @@ Executed when the connection is closed by the server.
 
 import Client from "socket-actions/client";
 
-let client;
+let client = new Client("ws://localhost:3000", {
+    onClose: () => {
+        console.log("The server is probably offline. :(");
+    },
+    connectionTryLimit: 10
+});
 
-const connect = () => {
-    client = new Client("ws://localhost:3000", {
-        onClose: () => {
-            setTimeout(connect, 5000);
-        }
-    });
-}
-
-// In this example, when the connection is closed by the server, the client will wait for 5 seconds and try to connect again.
+// In this example, after 10 tries of reconnecting the client shows the console.log message.
 ```

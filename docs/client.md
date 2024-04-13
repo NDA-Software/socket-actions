@@ -2,7 +2,7 @@
 
 ## Description
 
-This class extends WebSocket and adds wrappers to some of the relevant WebSocket's events adding automatic authentication and other extra features.
+This class uses the web browser's WebSocket to connect to the SocketActions server and has some extra features to simplify the interaction.
 
 ## Constructor
 
@@ -13,6 +13,8 @@ This class extends WebSocket and adds wrappers to some of the relevant WebSocket
 - url (Default: "ws://localhost:3000"): Path to server's socket, generally starting with "ws://" or "wss://" when using SSL.
 - protocols: Accepts a string or string array and can be used to pass protocols to the socket server.
 - authentication: Accepts "any" data and if supplied, will be sent to the socket as soon as the connection is opened to try authenticating. If this variable is not set the client will assume authentication is not required and will skip the events onAuthResponse|onOpen|onAuthFailure and go directly to onMessage on all messages.
+- connectionTryLimit (Default: 0): If provided, defines the amount of times the client will try to reconnect on a lost connection to the server.
+- secondsBetweenRetries (Default: 5): Defines the amount of seconds to wait between every server connection retry.
 
 ## Event Options
 
@@ -30,11 +32,13 @@ These options are added to the constructor together with the options object abov
 
 - authentication (Readonly any): This will keep the authentication provided in the constructor for later check if necessary.
 - isAuthenticated (Readonly boolean): This changes to true after onAuthResponse runs with no errors.
+- socket (Readonly WebSocket): This allows you to access the WebSocket client directly if required. This should be avoided unless you know what you are doing as it can interfere with the proper usage of the Client class.
 
 ### Public Methods
 
 - tryAuth (authentcation?: any): This method can be called any time when the client wants to authenticate again, the authentication can be updated by passing the new one as a parameter. This method fails if the client is already authenticated.
 - sendAction (path: string, data?: Record\<string, any>): This method calls an action with the path given, a data object can be sent with the action as parameter to the action.
+- reconnect: This method can be called to force the client to try to reconnect to the server.
 
 ## Usage:
 

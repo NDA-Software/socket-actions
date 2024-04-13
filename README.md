@@ -34,35 +34,27 @@ The objective is to create an easy to use with little to no configuration WebSoc
 
 ## Roadmap:
 
-- 2.0.0:
-
-  - Removal of inheritance from both Socket and Client classes to allow for smoother usage without relying on constructors for all new instances.
-
 - 2.1.0:
 
-  - Add the option for actions to be queued and run in the sequence they are sent instead of asynchronous. This will server for systems that might have a problem with race conditions on the default setting and/or do not have the resources for multiple users' actions to be run at the same time.
-  - Add relevant tests.
-  - Add relevant documentations.
+  - Add the option for actions to be awaited for an answer simulating a http request without creating a new connection.
 
 - 2.2.0:
 
-  - Add the option for a single user to only be able to add a single action to the queue a time, with options to either default to ignore the new action or overwrite the old action.
-  - Add relevant tests.
-  - Add relevant documentations.
+  - Add the option for actions to be queued and run in the sequence they are sent instead of asynchronous. This will server for systems that might have a problem with race conditions on the default setting and/or do not have the resources for multiple users' actions to be run at the same time.
 
 - 2.3.0:
 
+  - Add the option for a single user to only be able to add a single action to the queue a time, with options to either default to ignore the new action or overwrite the old action.
+
+- 2.4.0:
+
   - Add caching options to avoid multiple similar connections in client object.
-  - Update tests.
-  - Update documentations.
 
 - Before next update:
 
   - Create docker image to run this server with little to no configurations
 
-- 2.4.0:
+- 2.5.0:
 
   - Create another parallel entrypoint to be used for local connections between other Docker Containers and similar infraestructures with separate credential style as default.
   - Create ServerActions to be used in such entrypoint. Users should not have access to server actions and server-side clients should not have access to user's actions.
-  - Add tests to server-side connections.
-  - Add documentation to server-side connections.
