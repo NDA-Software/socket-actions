@@ -42,10 +42,6 @@ describe('Action:', () => {
             con1.send('hey');
         };
 
-        con2.onopen = () => {
-            con2.send('hey');
-        };
-
         let messageCounter: number = 0;
 
         const onMessage = ({ data: message }: any): void => {
