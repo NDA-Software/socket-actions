@@ -1,67 +1,82 @@
-import ws, { type ServerOptions } from 'ws';
-import express from 'express';
-import { type IncomingMessage, type Server } from 'http';
-import bodyParser from 'body-parser';
-import cors from 'cors';
-import { v4 as uuid } from 'uuid';
-import listenerFactory from '../helpers/listenerFactory';
+import ws from "ws";
+import express from "express";
+import { type IncomingMessage, type Server } from "http";
+import bodyParser from "body-parser";
+import cors from "cors";
+import { v4 as uuid } from "uuid";
+import listenerFactory from "../helpers/listenerFactory";
 
-import { executeOnFiles } from 'ts-cornucopia/file';
-import type Action from './action';
+import { executeOnFiles } from "ts-cornucopia/file";
+import type Action from "./action";
 
 export type DataType = Record<string, any>;
 
 export type ClientSocket = ws & {
-    userData: DataType
+    userData: DataType;
 };
 
 export type MessageObject = {
-    path: string,
-    data: DataType
+    path: string;
+    data: DataType;
 };
 
 type sendMessageToAllOptions = { exceptions: ClientSocket[] | string[] };
 
-export type onConnection = (socket: ClientSocket, req: IncomingMessage) => Promise<void>;
+export type onConnection = (
+    socket: ClientSocket,
+    req: IncomingMessage,
+) => Promise<void>;
 
 export type onAuth = (socket: ClientSocket, message: Buffer) => Promise<void>;
-export type onAuthSuccess = (socket: ClientSocket, message: Buffer) => Promise<void>;
-export type onAuthFailure = (socket: ClientSocket, error: Error, message: Buffer) => Promise<void>;
+export type onAuthSuccess = (
+    socket: ClientSocket,
+    message: Buffer,
+) => Promise<void>;
+export type onAuthFailure = (
+    socket: ClientSocket,
+    error: Error,
+    message: Buffer,
+) => Promise<void>;
 
-export type onMessage = (socket: ClientSocket, messageObject: MessageObject) => Promise<void>;
+export type onMessage = (
+    socket: ClientSocket,
+    messageObject: MessageObject,
+) => Promise<void>;
 
 export type onClose = (socket: ClientSocket) => Promise<void>;
 export type onError = (socket: ClientSocket, err: Error) => Promise<void>;
 
 export type SocketOptions = {
-    serverOptions?: ServerOptions
-    actionsPath?: string,
-    actions?: Record<string, Action>,
-    disableAuthentication?: boolean,
-    onConnection?: onConnection,
-    onAuth?: onAuth,
-    onAuthSuccess?: onAuthSuccess,
-    onAuthFailure?: onAuthFailure,
-    onClose?: onClose,
-    onError?: onError,
-    onMessage?: onMessage
-}
+    serverOptions?: ws.ServerOptions;
+    actionsPath?: string;
+    actions?: Record<string, Action>;
+    disableAuthentication?: boolean;
+    onConnection?: onConnection;
+    onAuth?: onAuth;
+    onAuthSuccess?: onAuthSuccess;
+    onAuthFailure?: onAuthFailure;
+    onClose?: onClose;
+    onError?: onError;
+    onMessage?: onMessage;
+};
 
 const defaultOptions = {
-    actionsPath: './actions',
-    disableAuthentication: false
+    actionsPath: "./actions",
+    disableAuthentication: false,
 };
 
 const authenticationNotImplemented = async (): Promise<void> => {
-    throw new Error('Authentication not implemented. Maybe you forgot to disable it.');
+    throw new Error(
+        "Authentication not implemented. Maybe you forgot to disable it.",
+    );
 };
 
 const onAuthSuccessDefault = async (socket: ClientSocket): Promise<void> => {
-    socket.send('Authenticated');
+    socket.send("Authenticated");
 };
 
 const onAuthFailureDefault = async (socket: ClientSocket): Promise<void> => {
-    socket.send('Failed Authentication');
+    socket.send("Failed Authentication");
 };
 
 const emptyPromiseFunction = async (): Promise<void> => {};
@@ -83,9 +98,9 @@ export default class Socket {
 
     protected readonly _activeClients: ClientSocket[] = [];
 
-    private wsInstance: ws.Server | undefined;
+    private wsInstance: ws.WebSocketServer | undefined;
 
-    private readonly serverOptions: ServerOptions;
+    private readonly serverOptions: ws.ServerOptions;
 
     constructor(options: SocketOptions) {
         const {
@@ -98,36 +113,46 @@ export default class Socket {
             onAuthFailure,
             onClose,
             onError,
-            onMessage
+            onMessage,
         } = { ...defaultOptions, ...options };
 
         let { serverOptions } = options;
 
-        if (serverOptions === undefined)
+        if (serverOptions === undefined) {
             serverOptions = {};
+        }
 
         this.serverOptions = serverOptions;
 
         this.Actions = actions ?? {};
 
-        if (actions !== undefined && actionsPath !== undefined && actionsPath !== './actions')
-            console.warn('Actions and ActionPath supplied in the configuration, actionPath ignored.');
+        if (
+            actions !== undefined && actionsPath !== undefined &&
+            actionsPath !== "./actions"
+        ) {
+            console.warn(
+                "Actions and ActionPath supplied in the configuration, actionPath ignored.",
+            );
+        }
 
         if (actions === undefined) {
-            const actionFiles = executeOnFiles(actionsPath, (file) => file, { recursive: true });
+            const actionFiles = executeOnFiles(actionsPath, (file) => file, {
+                recursive: true,
+            });
 
             for (const file of actionFiles) {
-                const fullFilePath = process.cwd() + file.replace('./', '/');
+                const fullFilePath = process.cwd() + file.replace("./", "/");
 
                 const Action = require(fullFilePath);
 
                 let fileName = file
-                    .replace(actionsPath, '')
-                    .replace('.ts', '')
-                    .replace('.js', '');
+                    .replace(actionsPath, "")
+                    .replace(".ts", "")
+                    .replace(".js", "");
 
-                if (fileName[0] === '/')
+                if (fileName[0] === "/") {
                     fileName = fileName.substring(1);
+                }
 
                 this.Actions[fileName] = new Action();
             }
@@ -143,8 +168,11 @@ export default class Socket {
 
         this.disableAuthentication = disableAuthentication;
 
-        if (disableAuthentication && onAuth !== undefined)
-            console.warn('onAuth event both added and supressed by disableAuthentication option.');
+        if (disableAuthentication && onAuth !== undefined) {
+            console.warn(
+                "onAuth event both added and supressed by disableAuthentication option.",
+            );
+        }
     }
 
     public async start(): Promise<void> {
@@ -152,8 +180,8 @@ export default class Socket {
 
         const {
             server,
-            host = 'http://localhost',
-            port = 3000
+            host = "http://localhost",
+            port = 3000,
         } = serverOptions;
 
         delete serverOptions.host;
@@ -166,7 +194,7 @@ export default class Socket {
 
             app.use(cors({
                 origin: host,
-                optionsSuccessStatus: 200
+                optionsSuccessStatus: 200,
             }));
 
             serverOptions.server = app.listen(port);
@@ -174,10 +202,13 @@ export default class Socket {
 
         this._server = serverOptions.server;
 
-        this.wsInstance = new ws.Server(serverOptions);
+        this.wsInstance = new ws.WebSocketServer(serverOptions);
 
         this.prepareAllActions().then(() => {
-            this.wsInstance?.on('connection', listenerFactory(this, null, this.connecting));
+            this.wsInstance?.on(
+                "connection",
+                listenerFactory(this, null, this.connecting),
+            );
         }).catch((err) => {
             throw new Error(err);
         });
@@ -189,7 +220,7 @@ export default class Socket {
         await this.start();
     }
 
-    protected async prepareAllActions (): Promise<void> {
+    protected async prepareAllActions(): Promise<void> {
         const promises: Array<Promise<void>> = [];
 
         for (const key in this.Actions) {
@@ -201,24 +232,37 @@ export default class Socket {
         await Promise.all(promises);
     }
 
-    protected async connecting (socket: ClientSocket, req: IncomingMessage): Promise<void> {
+    protected async connecting(
+        socket: ClientSocket,
+        req: IncomingMessage,
+    ): Promise<void> {
         try {
             await this.onConnection(socket, req);
 
-            socket.on('error', listenerFactory(this, socket, this.reportingError));
+            socket.on(
+                "error",
+                listenerFactory(this, socket, this.reportingError),
+            );
 
             if (this.disableAuthentication) {
-                socket.on('message', listenerFactory(this, socket, this.receivingMessage));
+                socket.on(
+                    "message",
+                    listenerFactory(this, socket, this.receivingMessage),
+                );
 
                 socket.userData = {
-                    id: uuid()
+                    id: uuid(),
                 };
 
                 this._activeClients.push(socket);
-            } else
-                socket.on('message', listenerFactory(this, socket, this.authenticating));
+            } else {
+                socket.on(
+                    "message",
+                    listenerFactory(this, socket, this.authenticating),
+                );
+            }
 
-            socket.on('close', listenerFactory(this, socket, this.closing));
+            socket.on("close", listenerFactory(this, socket, this.closing));
         } catch (err) {
             console.error(err);
 
@@ -226,15 +270,20 @@ export default class Socket {
         }
     }
 
-    protected async authenticating (socket: ClientSocket, message: Buffer): Promise<void> {
+    protected async authenticating(
+        socket: ClientSocket,
+        message: Buffer,
+    ): Promise<void> {
         try {
             await this.onAuth(socket, message);
 
-            if (socket.userData === undefined)
+            if (socket.userData === undefined) {
                 socket.userData = {};
+            }
 
-            if (socket.userData.id === undefined)
+            if (socket.userData.id === undefined) {
                 socket.userData.id = uuid();
+            }
 
             this._activeClients.push(socket);
         } catch (err) {
@@ -243,14 +292,20 @@ export default class Socket {
             return;
         }
 
-        socket.removeAllListeners('message');
+        socket.removeAllListeners("message");
 
-        socket.on('message', listenerFactory(this, socket, this.receivingMessage));
+        socket.on(
+            "message",
+            listenerFactory(this, socket, this.receivingMessage),
+        );
 
         await this.onAuthSuccess(socket, message);
     }
 
-    protected async receivingMessage (socket: ClientSocket, message: string): Promise<void> {
+    protected async receivingMessage(
+        socket: ClientSocket,
+        message: string,
+    ): Promise<void> {
         try {
             const messageObject = JSON.parse(message) as MessageObject;
 
@@ -261,7 +316,7 @@ export default class Socket {
             const parameters = {
                 socket,
                 userData: socket.userData,
-                data
+                data,
             };
 
             await this.Actions[path]?.run(parameters);
@@ -270,63 +325,80 @@ export default class Socket {
         }
     }
 
-    protected async reportingError (socket: ClientSocket, err: Error): Promise<void> {
+    protected async reportingError(
+        socket: ClientSocket,
+        err: Error,
+    ): Promise<void> {
         await this.onError(socket, err);
     }
 
-    protected async closing (socket: ClientSocket): Promise<void> {
+    protected async closing(socket: ClientSocket): Promise<void> {
         await this.onClose(socket);
 
-        const socketIndex = this._activeClients.findIndex((item) => item.userData.id === socket.userData.id);
+        const socketIndex = this._activeClients.findIndex((item) =>
+            item.userData.id === socket.userData.id
+        );
 
-        if (socketIndex !== -1)
+        if (socketIndex !== -1) {
             this._activeClients.splice(socketIndex, 1);
+        }
     }
 
-    public closeSocket(cb?: ((err?: Error | undefined) => void) | undefined): void {
+    public closeSocket(
+        cb?: ((err?: Error | undefined) => void) | undefined,
+    ): void {
         this.wsInstance?.close(cb);
     }
 
     public close(
         socketCallback?: ((err?: Error | undefined) => void) | undefined,
-        expressCallback?: ((err?: Error | undefined) => void)
+        expressCallback?: (err?: Error | undefined) => void,
     ): void {
         this.closeSocket(socketCallback);
 
         this._server?.close(expressCallback);
     }
 
-    public get activeClients (): DataType[] {
-        return this._activeClients.map(item => item.userData);
+    public get activeClients(): DataType[] {
+        return this._activeClients.map((item) => item.userData);
     }
 
-    public get server (): Server | undefined {
+    public get server(): Server | undefined {
         return this._server;
     }
 
-    public sendMessage (socket: ClientSocket, data: DataType | string): void {
-        if (typeof data !== 'string')
+    public sendMessage(socket: ClientSocket, data: DataType | string): void {
+        if (typeof data !== "string") {
             data = JSON.stringify(data);
+        }
 
         socket.send(data);
     }
 
-    public sendMessageById (id: string, data: DataType | string): void {
-        const socket = this._activeClients.find(item => item.userData.id === id);
+    public sendMessageById(id: string, data: DataType | string): void {
+        const socket = this._activeClients.find((item) =>
+            item.userData.id === id
+        );
 
-        if (socket !== undefined)
+        if (socket !== undefined) {
             this.sendMessage(socket, data);
+        }
     }
 
-    public sendMessageToAll (data: DataType | string, { exceptions = [] }: sendMessageToAllOptions): void {
-        if (typeof exceptions[0] === 'object')
+    public sendMessageToAll(
+        data: DataType | string,
+        { exceptions = [] }: sendMessageToAllOptions,
+    ): void {
+        if (typeof exceptions[0] === "object") {
             exceptions = exceptions.map((item) => {
                 return (item as ClientSocket).userData.id;
             });
+        }
 
         for (const client of this._activeClients) {
-            if (exceptions.includes(client.userData.id))
+            if (exceptions.includes(client.userData.id)) {
                 continue;
+            }
 
             this.sendMessage(client, data);
         }

@@ -11,6 +11,9 @@ run with an object oriented structure to allow routing of WebSocket messages.
 - [TS-Cornucopia](https://www.npmjs.com/package/ts-cornucopia): Just a quick and
   simple bundle of helper functions.
 
+- [WS](https://www.npmjs.com/package/ws): The basic websocket implementation for
+  node servers.
+
 ## Classes
 
 - [Socket](/docs/server/socket.md): The main class that is used to instantiate
