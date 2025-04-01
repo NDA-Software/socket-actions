@@ -1,5 +1,5 @@
 const parseCookies = (cookieString: string): any => {
-    const cookieArray = cookieString.split(';').map(item => item.split('='));
+    const cookieArray = cookieString.split(";").map((item) => item.split("="));
 
     const parsedCookies: Record<string, string> = {};
 

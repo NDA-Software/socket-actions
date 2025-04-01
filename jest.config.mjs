@@ -1,7 +1,7 @@
 const jestConfig = {
     transform: {
-        '^.+\\.[tj]sx?$': 'ts-jest'
-    }
+        "^.+\\.[tj]sx?$": "ts-jest",
+    },
 };
 
 export default jestConfig;

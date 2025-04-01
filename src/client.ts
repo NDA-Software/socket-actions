@@ -1,31 +1,34 @@
-import listenerFactory, { type FactoryFunction } from './helpers/listenerFactory';
+import listenerFactory, {
+    type FactoryFunction,
+} from "./helpers/listenerFactory";
 
 export type onOpen = () => Promise<void>;
 export type onClose = () => Promise<void>;
 export type messageReceiver = (message: MessageEvent) => Promise<void>;
 
 export type clientOptions = {
-    url?: string,
-    authentication?: any,
-    connectionTryLimit?: number,
-    secondsBetweenRetries?: number,
-    protocols?: string | string[],
-    onOpen?: onOpen,
-    onClose?: onClose,
-    onMessage?: messageReceiver,
-    onAuthResponse?: messageReceiver,
-    onAuthFailure?: messageReceiver,
-}
+    url?: string;
+    authentication?: any;
+    connectionTryLimit?: number;
+    secondsBetweenRetries?: number;
+    protocols?: string | string[];
+    onOpen?: onOpen;
+    onClose?: onClose;
+    onMessage?: messageReceiver;
+    onAuthResponse?: messageReceiver;
+    onAuthFailure?: messageReceiver;
+};
 
 const defaultOnAuthResponse = async ({ data }: MessageEvent): Promise<void> => {
-    if (data !== 'Authenticated')
+    if (data !== "Authenticated") {
         throw new Error(data);
+    }
 };
 
 const defaultOptions = {
-    url: 'ws://localhost:3000',
+    url: "ws://localhost:3000",
     connectionTryLimit: 0,
-    secondsBetweenRetries: 5
+    secondsBetweenRetries: 5,
 };
 
 export default class Client {
@@ -52,18 +55,31 @@ export default class Client {
     private _isConnected = false;
 
     constructor(options: clientOptions = {}) {
-        this.connectionTryLimit = options.connectionTryLimit ?? defaultOptions.secondsBetweenRetries;
-        this.secondsBetweenRetries = options.secondsBetweenRetries ?? defaultOptions.secondsBetweenRetries;
+        this.connectionTryLimit = options.connectionTryLimit ??
+            defaultOptions.secondsBetweenRetries;
+        this.secondsBetweenRetries = options.secondsBetweenRetries ??
+            defaultOptions.secondsBetweenRetries;
 
         let { authentication } = options;
 
-        if (authentication !== undefined && typeof authentication === 'object')
+        if (
+            authentication !== undefined && typeof authentication === "object"
+        ) {
             authentication = JSON.stringify(authentication);
+        }
 
         this._authentication = authentication;
 
-        this.preparedOnAuthResponse = listenerFactory(this, null, this.authResponse);
-        this.preparedOnMessageResponse = listenerFactory(this, null, this.messageResponse);
+        this.preparedOnAuthResponse = listenerFactory(
+            this,
+            null,
+            this.authResponse,
+        );
+        this.preparedOnMessageResponse = listenerFactory(
+            this,
+            null,
+            this.messageResponse,
+        );
 
         this.onAuthResponse = options.onAuthResponse ?? defaultOnAuthResponse;
         this.onOpen = options.onOpen;
@@ -80,13 +96,20 @@ export default class Client {
     private connect(): void {
         this._socket = new WebSocket(this.url, this.protocols);
 
-        this._socket.addEventListener('open', listenerFactory(this, null, this.opening));
-        this._socket.addEventListener('close', listenerFactory(this, null, this.closing));
+        this._socket.addEventListener(
+            "open",
+            listenerFactory(this, null, this.opening),
+        );
+        this._socket.addEventListener(
+            "close",
+            listenerFactory(this, null, this.closing),
+        );
     }
 
     public reconnect(): void {
-        if (this._isConnected)
+        if (this._isConnected) {
             this.close();
+        }
 
         this.connect();
     }
@@ -95,15 +118,19 @@ export default class Client {
         const { _authentication: authentication } = this;
 
         if (authentication !== undefined) {
-            this._socket?.addEventListener('message', this.preparedOnAuthResponse);
+            this._socket?.addEventListener(
+                "message",
+                this.preparedOnAuthResponse,
+            );
 
             this.tryAuth();
 
             return;
         }
 
-        if (this.onOpen !== undefined)
+        if (this.onOpen !== undefined) {
             await this.onOpen();
+        }
 
         this.enableMessageReceiver();
 
@@ -116,8 +143,12 @@ export default class Client {
         if (this.connectionTries < this.connectionTryLimit) {
             this.connectionTries++;
 
-            console.log(`Connection to server lost. Reconnecting in ${this.secondsBetweenRetries} seconds...`);
-            console.log(`(Attempt ${this.connectionTries} of ${this.connectionTryLimit})`);
+            console.log(
+                `Connection to server lost. Reconnecting in ${this.secondsBetweenRetries} seconds...`,
+            );
+            console.log(
+                `(Attempt ${this.connectionTries} of ${this.connectionTryLimit})`,
+            );
 
             setTimeout(() => {
                 this.reconnect();
@@ -126,8 +157,9 @@ export default class Client {
             return;
         }
 
-        if (this.onClose !== undefined)
+        if (this.onClose !== undefined) {
             await this.onClose();
+        }
     }
 
     public close(code?: number | undefined, reason?: string | undefined): void {
@@ -136,32 +168,42 @@ export default class Client {
         this._socket?.close(code, reason);
     }
 
-    private enableMessageReceiver (): void {
-        this._socket?.addEventListener('message', this.preparedOnMessageResponse);
+    private enableMessageReceiver(): void {
+        this._socket?.addEventListener(
+            "message",
+            this.preparedOnMessageResponse,
+        );
     }
 
     private async authResponse(message: MessageEvent): Promise<void> {
         try {
-            if (this.onAuthResponse !== undefined)
+            if (this.onAuthResponse !== undefined) {
                 await this.onAuthResponse(message);
+            }
 
             this._isAuthenticated = true;
 
-            if (this.onOpen !== undefined)
+            if (this.onOpen !== undefined) {
                 await this.onOpen();
+            }
 
-            this._socket?.removeEventListener('message', this.preparedOnAuthResponse);
+            this._socket?.removeEventListener(
+                "message",
+                this.preparedOnAuthResponse,
+            );
 
             this.enableMessageReceiver();
         } catch (err) {
-            if (this.onAuthFailure !== undefined)
+            if (this.onAuthFailure !== undefined) {
                 await this.onAuthFailure(message);
+            }
         }
     }
 
     private async messageResponse(message: MessageEvent): Promise<void> {
-        if (this.onMessage !== undefined)
+        if (this.onMessage !== undefined) {
             await this.onMessage(message);
+        }
     }
 
     public get authentication(): any {
@@ -182,24 +224,26 @@ export default class Client {
 
     public tryAuth(authentication?: any): void {
         if (this.isAuthenticated) {
-            console.warn('Already logged in. Execution of tryAuth blocked.');
+            console.warn("Already logged in. Execution of tryAuth blocked.");
 
             return;
         }
 
-        if (authentication !== undefined)
+        if (authentication !== undefined) {
             this._authentication = authentication;
+        }
 
         this._socket?.send(this._authentication);
     }
 
     public sendAction(path: string, data?: Record<string, any>): void {
         const messageObj: any = {
-            path
+            path,
         };
 
-        if (data !== undefined)
+        if (data !== undefined) {
             messageObj.data = data;
+        }
 
         const message = JSON.stringify(messageObj);
 

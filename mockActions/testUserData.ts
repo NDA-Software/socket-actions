@@ -1,4 +1,4 @@
-import Action, { type ActionParameters } from '../src/server/action';
+import Action, { type ActionParameters } from "../src/server/action";
 
 export default class TestUserData extends Action {
     override async onRun(params: ActionParameters): Promise<void> {
@@ -8,4 +8,4 @@ export default class TestUserData extends Action {
 
         socket.send(`User Id: ${id}`);
     }
-};
+}

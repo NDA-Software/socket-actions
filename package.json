@@ -20,8 +20,6 @@
         "start": "node ./dist/cjs/index.cjs",
         "build": "rollup -c",
         "watch": "rollup -c -w",
-        "lint": "eslint src --ext .ts,.tsx",
-        "lint-fix": "eslint src --ext .ts,.tsx --fix",
         "test": "jest --detectOpenHandles"
     },
     "files": [

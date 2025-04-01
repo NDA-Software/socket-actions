@@ -1,4 +1,4 @@
-import Action, { type ActionParameters } from '../src/server/action';
+import Action, { type ActionParameters } from "../src/server/action";
 
 export default class TestCommunication extends Action {
     override async onRun(params: ActionParameters): Promise<void> {
@@ -8,4 +8,4 @@ export default class TestCommunication extends Action {
 
         this.server?.sendMessageById(toId, message);
     }
-};
+}

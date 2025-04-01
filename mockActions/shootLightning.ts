@@ -1,19 +1,25 @@
-import Action, { type ActionParameters } from '../src/server/action';
+import Action, { type ActionParameters } from "../src/server/action";
 
 export default class ShootLightning extends Action {
-    protected override async onCheckPermissions(_parameters: ActionParameters): Promise<void> {
+    protected override async onCheckPermissions(
+        _parameters: ActionParameters,
+    ): Promise<void> {
         const { userData } = _parameters;
 
-        if (userData.swordColor === 'green')
-            throw new Error('You cannot do that.');
+        if (userData.swordColor === "green") {
+            throw new Error("You cannot do that.");
+        }
     }
 
-    protected override async onError(_parameters: ActionParameters, err: Error): Promise<void> {
+    protected override async onError(
+        _parameters: ActionParameters,
+        err: Error,
+    ): Promise<void> {
         _parameters.socket.send(err.message);
     }
 
-    public returnMessage = '';
+    public returnMessage = "";
     override async onRun(_data: ActionParameters): Promise<void> {
-        _data.socket.send('I am firing my lazer! DAAAAAAAAAAAAAAAH!');
+        _data.socket.send("I am firing my lazer! DAAAAAAAAAAAAAAAH!");
     }
-};
+}
