@@ -106,7 +106,6 @@ export default class Socket {
 
     constructor(options: SocketOptions) {
         const {
-            actionsPath,
             actions,
             disableAuthentication,
             onConnection,
@@ -127,38 +126,7 @@ export default class Socket {
         this.serverOptions = serverOptions;
 
         this.Actions = actions ?? {};
-
-        if (
-            actions !== undefined && actionsPath !== undefined &&
-            actionsPath !== "./actions"
-        ) {
-            console.warn(
-                "Actions and ActionPath supplied in the configuration, actionPath ignored.",
-            );
-        }
-
-        if (actions === undefined) {
-            const actionFiles = executeOnFiles(actionsPath, (file) => file, {
-                recursive: true,
-            });
-
-            for (const file of actionFiles) {
-                const fullFilePath = process.cwd() + file.replace("./", "/");
-
-                const Action = require(fullFilePath);
-
-                let fileName = file
-                    .replace(actionsPath, "")
-                    .replace(".ts", "")
-                    .replace(".js", "");
-
-                if (fileName[0] === "/") {
-                    fileName = fileName.substring(1);
-                }
-
-                this.Actions[fileName] = new Action();
-            }
-        }
+        this.initActions(options);
 
         this.onConnection = onConnection ?? emptyPromiseFunction;
         this.onAuth = onAuth ?? authenticationNotImplemented;
@@ -174,6 +142,42 @@ export default class Socket {
             console.warn(
                 "onAuth event both added and supressed by disableAuthentication option.",
             );
+        }
+    }
+
+    public async initActions(
+        { actions, actionsPath }: SocketOptions,
+    ): Promise<void> {
+        if (
+            actions !== undefined && actionsPath !== undefined &&
+            actionsPath !== "./actions"
+        ) {
+            console.warn(
+                "Actions and ActionsPath supplied in the configuration, actionsPath ignored.",
+            );
+        }
+
+        if (actions === undefined && actionsPath !== undefined) {
+            const actionFiles = executeOnFiles(actionsPath, (file) => file, {
+                recursive: true,
+            });
+
+            for (const file of actionFiles) {
+                const fullFilePath = process.cwd() + file.replace("./", "/");
+
+                const Action = await import(fullFilePath);
+
+                let fileName = file
+                    .replace(actionsPath, "")
+                    .replace(".ts", "")
+                    .replace(".js", "");
+
+                if (fileName[0] === "/") {
+                    fileName = fileName.substring(1);
+                }
+
+                this.Actions[fileName] = new Action();
+            }
         }
     }
 
