@@ -140,6 +140,8 @@ export default class Client {
 
     private async closing(): Promise<void> {
         this._isConnected = false;
+        this._isAuthenticated = false;
+
         if (this.connectionTries < this.connectionTryLimit) {
             this.connectionTries++;
 
