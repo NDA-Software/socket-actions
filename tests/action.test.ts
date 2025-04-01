@@ -70,8 +70,10 @@ describe("Action:", () => {
                     }));
                     break;
 
-                case 3: // Expecting success in Connection 2
-                    expect(message).toBe(
+                case 3: { // Expecting success in Connection 2
+                    const { data } = JSON.parse(message as string);
+
+                    expect(data.message).toBe(
                         "I am firing my lazer! DAAAAAAAAAAAAAAAH!",
                     );
 
@@ -80,6 +82,7 @@ describe("Action:", () => {
 
                     done();
                     break;
+                }
             }
 
             messageCounter++;

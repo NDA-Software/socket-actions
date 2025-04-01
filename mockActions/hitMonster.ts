@@ -1,7 +1,7 @@
-import Action, { type ActionParameters } from "../src/server/action";
+import Action, { type OnRunParameters } from "../src/server/action";
 
 export default class HitMonster extends Action {
-    override async onRun(params: ActionParameters): Promise<void> {
-        params.socket.send("ONE PUNCH!");
+    override async onRun(params: OnRunParameters): Promise<void> {
+        params.respond({ message: "ONE PUNCH!" });
     }
 }

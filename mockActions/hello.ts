@@ -1,9 +1,9 @@
-import Action, { type ActionParameters } from "../src/server/action";
+import Action, { type OnRunParameters } from "../src/server/action";
 
 export default class Hello extends Action {
-    override async onRun(params: ActionParameters): Promise<void> {
-        const { socket, data } = params;
+    override async onRun(params: OnRunParameters): Promise<void> {
+        const { respond, data } = params;
 
-        socket.send(`Hello ${data.name}!`);
+        respond({ message: `Hello ${data.name}!` });
     }
 }

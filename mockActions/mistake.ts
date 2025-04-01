@@ -1,7 +1,10 @@
-import Action, { type ActionParameters } from "../src/server/action";
+import Action, {
+    type ActionParameters,
+    type OnRunParameters,
+} from "../src/server/action";
 
 export default class Mistake extends Action {
-    override async onRun(_params: ActionParameters): Promise<void> {
+    override async onRun(_params: OnRunParameters): Promise<void> {
         throw new Error("You were defeated.");
     }
 

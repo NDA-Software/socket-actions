@@ -1,7 +1,9 @@
-import Action, { type ActionParameters } from "../src/server/action";
+import Action, { type OnRunParameters } from "../src/server/action";
 
 export default class FailToHitMonster extends Action {
-    override async onRun(params: ActionParameters): Promise<void> {
-        params.socket.send("You missed! Please wait for the bald guy's help.");
+    override async onRun(params: OnRunParameters): Promise<void> {
+        params.respond({
+            message: "You missed! Please wait for the bald guy's help.",
+        });
     }
 }

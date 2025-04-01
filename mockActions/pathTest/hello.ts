@@ -1,9 +1,9 @@
-import Action, { type ActionParameters } from "../../src/server/action";
+import Action, { type OnRunParameters } from "../../src/server/action";
 
-module.exports = class Hello extends Action {
-    override async onRun(params: ActionParameters): Promise<void> {
-        const { socket } = params;
+export default class Hello extends Action {
+    override async onRun(params: OnRunParameters): Promise<void> {
+        const { respond } = params;
 
-        socket.send("Hello from module.exports!");
+        respond({ message: "Hello from dynamic import!" });
     }
-};
+}

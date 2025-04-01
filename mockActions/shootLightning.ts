@@ -1,4 +1,7 @@
-import Action, { type ActionParameters } from "../src/server/action";
+import Action, {
+    type ActionParameters,
+    type OnRunParameters,
+} from "../src/server/action";
 
 export default class ShootLightning extends Action {
     protected override async onCheckPermissions(
@@ -19,7 +22,7 @@ export default class ShootLightning extends Action {
     }
 
     public returnMessage = "";
-    override async onRun(_data: ActionParameters): Promise<void> {
-        _data.socket.send("I am firing my lazer! DAAAAAAAAAAAAAAAH!");
+    override async onRun(_data: OnRunParameters): Promise<void> {
+        _data.respond({ message: "I am firing my lazer! DAAAAAAAAAAAAAAAH!" });
     }
 }

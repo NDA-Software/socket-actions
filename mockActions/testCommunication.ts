@@ -1,7 +1,7 @@
-import Action, { type ActionParameters } from "../src/server/action";
+import Action, { type OnRunParameters } from "../src/server/action";
 
 export default class TestCommunication extends Action {
-    override async onRun(params: ActionParameters): Promise<void> {
+    override async onRun(params: OnRunParameters): Promise<void> {
         const { data } = params;
 
         const { toId, message } = data;

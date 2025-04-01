@@ -145,21 +145,26 @@ describe("Socket:", () => {
                     break;
 
                 case 3: // Expect action to be executed.
-                    expect(message.data).toBe("Hello World!");
+                    const { data } = JSON.parse(message.data as string);
+
+                    expect(data.message).toBe("Hello World!");
 
                     con.send(JSON.stringify({
                         path: "getId",
                     }));
                     break;
 
-                case 4:
+                case 4: {
+                    const { data } = JSON.parse(message.data as string);
+
                     expect(
-                        uuidValidate(message.data as string),
+                        uuidValidate(data.id as string),
                     ).toBe(true);
 
                     con.close();
                     done();
                     break;
+                }
             }
 
             messageCounter++;
@@ -180,20 +185,26 @@ describe("Socket:", () => {
                     con.send(JSON.stringify({ path: "hitMonster" }));
                     break;
 
-                case 1: // Expect for attack to have failed.
-                    expect(message.data).toBe(
+                case 1: { // Expect for attack to have failed.
+                    const { data } = JSON.parse(message.data as string);
+
+                    expect(data.message).toBe(
                         "You missed! Please wait for the bald guy's help.",
                     );
 
                     con.send(JSON.stringify({ path: "hitMonster" }));
                     break;
+                }
 
-                case 2: // Expect action to be executed.
-                    expect(message.data).toBe("ONE PUNCH!");
+                case 2: { // Expect action to be executed.
+                    const { data } = JSON.parse(message.data as string);
+
+                    expect(data.message).toBe("ONE PUNCH!");
 
                     con.close();
                     done();
                     break;
+                }
             }
 
             messageCounter++;
@@ -247,7 +258,9 @@ describe("Socket:", () => {
         };
 
         con.onmessage = (message) => {
-            expect(message.data).toBe("Hello from module.exports!");
+            const { data } = JSON.parse(message.data as string);
+
+            expect(data.message).toBe("Hello from dynamic import!");
 
             con.close();
 
@@ -268,7 +281,7 @@ describe("Socket:", () => {
         };
 
         let con1Counter = 0;
-        con.onmessage = ({ data }) => {
+        con.onmessage = (message) => {
             switch (con1Counter) {
                 case 0:
                     con.send(JSON.stringify({
@@ -280,8 +293,10 @@ describe("Socket:", () => {
 
                     break;
 
-                case 1:
-                    expect(data).toBe("Ok");
+                case 1: {
+                    const { data } = JSON.parse(message.data as string);
+
+                    expect(data.message).toBe("Ok");
 
                     con.send(JSON.stringify({
                         path: "testCommunication",
@@ -292,9 +307,10 @@ describe("Socket:", () => {
                     }));
 
                     break;
+                }
 
                 case 2:
-                    expect(data).toBe("Hello!");
+                    expect(message.data).toBe("Hello!");
                     con.close();
 
                     done();
@@ -305,7 +321,7 @@ describe("Socket:", () => {
         };
 
         let con2Counter = 0;
-        con2.onmessage = ({ data }) => {
+        con2.onmessage = (message) => {
             switch (con2Counter) {
                 case 0:
                     con2.send(JSON.stringify({
@@ -317,9 +333,13 @@ describe("Socket:", () => {
 
                     break;
 
-                case 1:
-                    expect(data).toBe("Ok");
+                case 1: {
+                    const { data } = JSON.parse(message.data as string);
+
+                    expect(data.message).toBe("Ok");
+
                     break;
+                }
 
                 case 2:
                     con2.send(JSON.stringify({
