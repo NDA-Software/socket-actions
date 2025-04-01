@@ -1,10 +1,15 @@
+import { createHash } from "crypto";
 import listenerFactory, {
     type FactoryFunction,
 } from "./helpers/listenerFactory";
 
+export type MessageObject = MessageEvent & {
+    requestId?: string;
+};
+
 export type onOpen = () => Promise<void>;
 export type onClose = () => Promise<void>;
-export type messageReceiver = (message: MessageEvent) => Promise<void>;
+export type messageReceiver = (message: MessageObject) => Promise<void>;
 
 export type clientOptions = {
     url?: string;
@@ -19,7 +24,9 @@ export type clientOptions = {
     onAuthFailure?: messageReceiver;
 };
 
-const defaultOnAuthResponse = async ({ data }: MessageEvent): Promise<void> => {
+const defaultOnAuthResponse = async (
+    { data }: MessageObject,
+): Promise<void> => {
     if (data !== "Authenticated") {
         throw new Error(data);
     }
@@ -53,6 +60,8 @@ export default class Client {
 
     private _isAuthenticated = false;
     private _isConnected = false;
+
+    private requests: Record<string, (message: MessageObject) => void> = {};
 
     constructor(options: clientOptions = {}) {
         this.connectionTryLimit = options.connectionTryLimit ??
@@ -177,7 +186,7 @@ export default class Client {
         );
     }
 
-    private async authResponse(message: MessageEvent): Promise<void> {
+    private async authResponse(message: MessageObject): Promise<void> {
         try {
             if (this.onAuthResponse !== undefined) {
                 await this.onAuthResponse(message);
@@ -202,7 +211,17 @@ export default class Client {
         }
     }
 
-    private async messageResponse(message: MessageEvent): Promise<void> {
+    private async messageResponse(message: MessageObject): Promise<void> {
+        if (message?.requestId) {
+            const response = this.requests[message.requestId];
+
+            if (response) {
+                response(message);
+            }
+
+            return;
+        }
+
         if (this.onMessage !== undefined) {
             await this.onMessage(message);
         }
@@ -238,8 +257,13 @@ export default class Client {
         this._socket?.send(this._authentication);
     }
 
-    public sendAction(path: string, data?: Record<string, any>): void {
+    public sendAction(
+        path: string,
+        data?: Record<string, any>,
+        extraDetails: Record<string, any> = {},
+    ): void {
         const messageObj: any = {
+            ...extraDetails,
             path,
         };
 
@@ -250,5 +274,40 @@ export default class Client {
         const message = JSON.stringify(messageObj);
 
         this._socket?.send(message);
+    }
+
+    public sendRequest(
+        path: string,
+        data?: Record<string, any>,
+        timeout = 5000,
+    ): Promise<Record<string, any>> {
+        const requestId = createHash("md5").update(Date.now().toString())
+            .digest("hex");
+
+        return new Promise((resolve, reject) => {
+            let resolved = false;
+
+            this.requests[requestId] = (message: MessageObject): void => {
+                resolved = true;
+
+                delete this.requests[requestId];
+
+                resolve(message);
+            };
+
+            setTimeout(() => {
+                if (resolved) {
+                    return;
+                }
+
+                delete this.requests[requestId];
+
+                reject(new Error("Request timed out."));
+            }, timeout);
+
+            this.sendAction(path, data, {
+                requestId,
+            });
+        });
     }
 }

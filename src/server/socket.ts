@@ -19,6 +19,7 @@ export type ClientSocket = ws & {
 export type MessageObject = {
     path: string;
     data: DataType;
+    requestId?: string;
 };
 
 type sendMessageToAllOptions = { exceptions: ClientSocket[] | string[] };
@@ -317,6 +318,7 @@ export default class Socket {
             const parameters = {
                 socket,
                 userData: socket.userData,
+                requestId: messageObject.requestId,
                 data,
             };
 
