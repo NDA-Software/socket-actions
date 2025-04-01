@@ -165,7 +165,7 @@ export default class Socket {
             for (const file of actionFiles) {
                 const fullFilePath = process.cwd() + file.replace("./", "/");
 
-                const Action = await import(fullFilePath);
+                const { default: Action } = await import(fullFilePath);
 
                 let fileName = file
                     .replace(actionsPath, "")
