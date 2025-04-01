@@ -49,15 +49,10 @@ run with an object oriented structure to allow routing of WebSocket messages.
 
 ## Roadmap:
 
-- 2.1.0:
-
-  - Add the option for actions to be awaited for an answer simulating a http
-    request without creating a new connection.
-
 - 2.2.0:
 
   - Add the option for actions to be queued and run in the sequence they are
-    sent instead of asynchronous. This will server for systems that might have a
+    sent instead of asynchronous. This will serve for systems that might have a
     problem with race conditions on the default setting and/or do not have the
     resources for multiple users' actions to be run at the same time.
 

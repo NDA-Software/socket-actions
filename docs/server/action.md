@@ -7,7 +7,7 @@ that will be dynamically called by Socket when needed.
 
 ## Main Implementation
 
-- onRun (data: ActionParameters) => Promise<void>: This method must be
+- onRun (data: OnRunParameters) => Promise<void>: This method must be
   implemented, in here it is expected to be the logic of the action be executed
   each time it is ran after all safety and permissions checks are passed.
 
@@ -27,6 +27,17 @@ contains these attributes:
   sent the message. socket: ([ClientSocket](/README.md#common-types)): User
   identifying socket that can be used to interact with the user that sent the
   message.
+
+### OnRunParameters
+
+This object includes all the informations of ActionParameters and this:
+
+- respond ((data: DataType) => void): This callback function passed allows the
+  action to send information directly to the user who called the action, this
+  must be the way to communicate with the user when responding to a call through
+  sendRequest as this will send with the data the requestId so that the client
+  knows how to handle the request correctly. This can also be used to send
+  information to the user when he uses sendAction.
 
 ## Optional Overrides
 
@@ -61,9 +72,10 @@ import { Action, type ActionParameters } from 'socket-actions';
 
 export default class Hello extends Action {
     override async onRun(params: ActionParameters): Promise<void> {
-        const { socket, data } = params;
+        const { socket, data, respond } = params;
 
-        socket.send(`Hello ${data.name}!`);
+        socket.send(JSON.stringify({ message: `Hello ${data.name}!` }));
+        respond({ message: `Hello ${data.name}!` }); // Another way to send the information back to the user.
     }
 };
 
