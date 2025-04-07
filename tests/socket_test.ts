@@ -1,7 +1,3 @@
-declare global {
-  type Buffer = typeof import("node:buffer").Buffer;
-}
-
 import { validate as uuidValidate } from "npm:uuid";
 import { assertEquals } from "jsr:@std/assert";
 import sleep from "../src/helpers/sleep.ts";
@@ -64,7 +60,7 @@ const onError: onErrorType = (socket, err) => {
 };
 
 const clients: Client[] = [];
-Deno.test("Testing Socket Server...", async (t) => {
+Deno.test("Socket Server:", async (t) => {
   const safeSocket = new Socket({
     actions,
     onConnection,
