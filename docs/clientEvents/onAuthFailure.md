@@ -1,12 +1,14 @@
-# onAuthFailure (message: MessageEvent): Promise\<void>
+# onAuthFailure (message: MessageEvent): Promise\<void> | void
 
 ## Description
 
-This event is executed after the onAuthResponse event throws an error. This can be used to consider the login a failure and/or request to try the login again.
+This event is executed after the onAuthResponse event throws an error. This can
+be used to consider the login a failure and/or request to try the login again.
 
 ## Parameters
 
-- message: The object received from the socket server that contains the data sent inside.
+- message: The object received from the socket server that contains the data
+  sent inside.
 
 ## Usage:
 

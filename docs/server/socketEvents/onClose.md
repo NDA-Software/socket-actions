@@ -1,4 +1,4 @@
-# onClose (socket: ClientSocket): Promise\<void>
+# onClose (socket: ClientSocket): Promise\<void> | void
 
 ## Description
 

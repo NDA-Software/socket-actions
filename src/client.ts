@@ -7,9 +7,9 @@ export type MessageObject = MessageEvent & {
     requestId?: string;
 };
 
-export type onOpen = () => Promise<void>;
-export type onClose = () => Promise<void>;
-export type messageReceiver = (message: MessageObject) => Promise<void>;
+export type onOpen = () => Promise<void> | void;
+export type onClose = () => Promise<void> | void;
+export type messageReceiver = (message: MessageObject) => Promise<void> | void;
 
 export type clientOptions = {
     url?: string;
@@ -24,9 +24,9 @@ export type clientOptions = {
     onAuthFailure?: messageReceiver;
 };
 
-const defaultOnAuthResponse = async (
+const defaultOnAuthResponse = (
     { data }: MessageObject,
-): Promise<void> => {
+): void => {
     if (data !== "Authenticated") {
         throw new Error(data);
     }
@@ -190,6 +190,10 @@ export default class Client {
         try {
             if (this.onAuthResponse !== undefined) {
                 await this.onAuthResponse(message);
+            }
+
+            if (message.data === "Failed Authentication") {
+                throw new Error(message.data);
             }
 
             this._isAuthenticated = true;

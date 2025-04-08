@@ -48,5 +48,5 @@ export default abstract class Action {
         }
     }
 
-    abstract onRun(data: OnRunParameters): Promise<void>;
+    abstract onRun(data: OnRunParameters): Promise<void> | void;
 }

@@ -1,12 +1,15 @@
-# onMessage (message: MessageEvent): Promise\<void>
+# onMessage (message: MessageEvent): Promise\<void> | void
 
 ## Description
 
-This event is executed on messages received after authentication or if authentication is disabled. This event should be used to deal with all information received from the server.
+This event is executed on messages received after authentication or if
+authentication is disabled. This event should be used to deal with all
+information received from the server.
 
 ## Parameters
 
-- message: The object received from the socket server that contains the data sent inside.
+- message: The object received from the socket server that contains the data
+  sent inside.
 
 ## Usage:
 

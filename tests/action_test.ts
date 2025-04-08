@@ -9,7 +9,7 @@ Deno.test("Action: ", async (t) => {
     shootLightning: new ShootLightning(),
   };
 
-  const onAuth: onAuthType = async (socket) => {
+  const onAuth: onAuthType = (socket) => {
     socket.userData = {
       swordColor: firstConnection ? "green" : "red",
     };
@@ -34,7 +34,7 @@ Deno.test("Action: ", async (t) => {
     let con2: Client | null = null;
 
     let messageCounter: number = 0;
-    const onMessage = ({ data: message }: any): void => {
+    const onMessage = ({ data: message }: { data: string }): void => {
       switch (messageCounter) {
         case 0: // Expecting failure due to permissions in Connection 1
           assertEquals(message, "You cannot do that.");

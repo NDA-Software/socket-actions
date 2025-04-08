@@ -1,3 +1,7 @@
+declare global {
+  type Buffer = typeof import("node:buffer").Buffer;
+}
+
 import { validate as uuidValidate } from "npm:uuid";
 import { assertEquals } from "jsr:@std/assert";
 import sleep from "../src/helpers/sleep.ts";

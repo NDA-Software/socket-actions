@@ -27,26 +27,32 @@ type sendMessageToAllOptions = { exceptions: ClientSocket[] | string[] };
 export type onConnection = (
     socket: ClientSocket,
     req: IncomingMessage,
-) => Promise<void>;
+) => Promise<void> | void;
 
-export type onAuth = (socket: ClientSocket, message: Buffer) => Promise<void>;
+export type onAuth = (
+    socket: ClientSocket,
+    message: Buffer,
+) => Promise<void> | void;
 export type onAuthSuccess = (
     socket: ClientSocket,
     message: Buffer,
-) => Promise<void>;
+) => Promise<void> | void;
 export type onAuthFailure = (
     socket: ClientSocket,
     error: Error,
     message: Buffer,
-) => Promise<void>;
+) => Promise<void> | void;
 
 export type onMessage = (
     socket: ClientSocket,
     messageObject: MessageObject,
-) => Promise<void>;
+) => Promise<void> | void;
 
-export type onClose = (socket: ClientSocket) => Promise<void>;
-export type onError = (socket: ClientSocket, err: Error) => Promise<void>;
+export type onClose = (socket: ClientSocket) => Promise<void> | void;
+export type onError = (
+    socket: ClientSocket,
+    err: Error,
+) => Promise<void> | void;
 
 export type SocketOptions = {
     serverOptions?: ServerOptions;
@@ -162,17 +168,24 @@ export default class Socket {
                 recursive: true,
             });
 
-            for (const file of actionFiles) {
-                const fullFilePath = process.cwd() + file.replace("./", "/");
+            for (let file of actionFiles) {
+                if (file.startsWith("../")) {
+                    file = "/" + file;
+                } else {
+                    file = file.replace("./", "/");
+                }
+
+                const fullFilePath = process.cwd() + file;
 
                 const { default: Action } = await import(fullFilePath);
 
                 let fileName = file
                     .replace(actionsPath, "")
                     .replace(".ts", "")
-                    .replace(".js", "");
+                    .replace(".js", "")
+                    .replace("//", "");
 
-                if (fileName[0] === "/") {
+                if (fileName.startsWith("/")) {
                     fileName = fileName.substring(1);
                 }
 
@@ -343,7 +356,7 @@ export default class Socket {
         await this.onClose(socket);
 
         const socketIndex = this._activeClients.findIndex((item) =>
-            item.userData.id === socket.userData.id
+            item.userData?.id === socket.userData?.id
         );
 
         if (socketIndex !== -1) {

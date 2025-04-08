@@ -1,13 +1,17 @@
-# onMessage (socket: ClientSocket, messageObject: MessageObject): Promise\<void>
+# onMessage (socket: ClientSocket, messageObject: MessageObject): Promise\<void> | void
 
 ## Description
 
-This event is executed on all message events after proper authentication (or disable of authentication) and before the execution of the action, this is expected to be used if any threatment to the exact data sent from the user is needed.
+This event is executed on all message events after proper authentication (or
+disable of authentication) and before the execution of the action, this is
+expected to be used if any threatment to the exact data sent from the user is
+needed.
 
 ## Parameters
 
 - clientSocket: The user-identifying open socket.
-- messageObject: The message is parsed from JSON to object before entering this event.
+- messageObject: The message is parsed from JSON to object before entering this
+  event.
 
 ## Usage:
 

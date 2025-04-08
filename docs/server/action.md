@@ -7,7 +7,7 @@ that will be dynamically called by Socket when needed.
 
 ## Main Implementation
 
-- onRun (data: OnRunParameters) => Promise<void>: This method must be
+- onRun (data: OnRunParameters) => Promise<void> | void: This method must be
   implemented, in here it is expected to be the logic of the action be executed
   each time it is ran after all safety and permissions checks are passed.
 
@@ -71,7 +71,7 @@ This object includes all the informations of ActionParameters and this:
 import { Action, type ActionParameters } from 'socket-actions';
 
 export default class Hello extends Action {
-    override async onRun(params: ActionParameters): Promise<void> {
+    override onRun(params: ActionParameters): void {
         const { socket, data, respond } = params;
 
         socket.send(JSON.stringify({ message: `Hello ${data.name}!` }));

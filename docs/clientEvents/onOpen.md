@@ -1,12 +1,15 @@
-# onOpen (message: MessageEvent): Promise\<void>
+# onOpen (message: MessageEvent): Promise\<void> | void
 
 ## Description
 
-This event is executed after the onAuthResponse event runs without errors or as soon as the connection is opened if authentication is not enabled. This can be used as a signal to start using the client to sending messages.
+This event is executed after the onAuthResponse event runs without errors or as
+soon as the connection is opened if authentication is not enabled. This can be
+used as a signal to start using the client to sending messages.
 
 ## Parameters
 
-- message: The object received from the socket server that contains the data sent inside.
+- message: The object received from the socket server that contains the data
+  sent inside.
 
 ## Usage:
 

@@ -1,8 +1,11 @@
-# onError (socket: ClientSocket, req: IncomingMessage): Promise\<void>
+# onError (socket: ClientSocket, req: IncomingMessage): Promise\<void> | void
 
 ## Description
 
-This event is executed when an unthreated exception is thrown inside any action or event. Keep in mind that unless the Action class' onError is overrode, all errors triggered inside an Action will probably already be catched before triggering this event.
+This event is executed when an unthreated exception is thrown inside any action
+or event. Keep in mind that unless the Action class' onError is overrode, all
+errors triggered inside an Action will probably already be catched before
+triggering this event.
 
 ## Parameters
 

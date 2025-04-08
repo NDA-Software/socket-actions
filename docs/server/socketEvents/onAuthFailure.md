@@ -1,14 +1,17 @@
-# onAuthFailure (socket: ClientSocket, error: Error, message: Buffer): Promise\<void>
+# onAuthFailure (socket: ClientSocket, error: Error, message: Buffer): Promise\<void> | void
 
 ## Description
 
-This event is run after onAuth is stopped by an error. If not provided this event will default to sending a message with "Failed Authentication" to the client socket.
+This event is run after onAuth is stopped by an error. If not provided this
+event will default to sending a message with "Failed Authentication" to the
+client socket.
 
 ## Parameters
 
 - clientSocket: The user-identifying open socket.
 - error: The error thrown by onAuth.
-- message: Message sent from the client with data expected to be used for authentication.
+- message: Message sent from the client with data expected to be used for
+  authentication.
 
 ## Usage:
 

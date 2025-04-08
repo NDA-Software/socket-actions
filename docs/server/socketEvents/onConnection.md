@@ -1,4 +1,4 @@
-# onConnection (socket: ClientSocket, req: IncomingMessage): Promise\<void>
+# onConnection (socket: ClientSocket, req: IncomingMessage): Promise\<void> | void
 
 ## Description
 

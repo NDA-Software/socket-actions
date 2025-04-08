@@ -1,4 +1,4 @@
-# onClose (): Promise\<void>
+# onClose (): Promise\<void> | void
 
 ## Description
 

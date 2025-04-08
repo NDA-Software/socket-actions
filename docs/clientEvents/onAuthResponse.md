@@ -1,14 +1,21 @@
-# onAuthResponse (message: MessageEvent): Promise\<void>
+# onAuthResponse (message: MessageEvent): Promise\<void> | void
 
 ## Description
 
-This event is executed on the first message received and expects it to be a response to its authentication attempt. If this event throws an exception, the event onAuthFailure will be triggered. To run through authentication again, you have to call the public method tryAuth after or inside the failure event.
+This event is executed on the first message received and expects it to be a
+response to its authentication attempt. If this event throws an exception, the
+event onAuthFailure will be triggered. To run through authentication again, you
+have to call the public method tryAuth after or inside the failure event.
 
-If this event is not provided the client will default to expect the message received to be "Authenticated" and if not it will throw an exception. "Authenticated" is the default response from Socket server if the SocketEvent "onAuthSuccess" is not overwritten.
+If this event is not provided the client will default to expect the message
+received to be "Authenticated" and if not it will throw an exception.
+"Authenticated" is the default response from Socket server if the SocketEvent
+"onAuthSuccess" is not overwritten.
 
 ## Parameters
 
-- message: The object received from the socket server that contains the data sent inside.
+- message: The object received from the socket server that contains the data
+  sent inside.
 
 ## Usage:
 

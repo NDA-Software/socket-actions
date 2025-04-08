@@ -1,13 +1,15 @@
-# onAuthSuccess (socket: ClientSocket, message: Buffer): Promise\<void>
+# onAuthSuccess (socket: ClientSocket, message: Buffer): Promise\<void> | void
 
 ## Description
 
-This event is run after onAuth is run without errors. If not provided this event will default to sending a message with "Authenticated" to the client socket.
+This event is run after onAuth is run without errors. If not provided this event
+will default to sending a message with "Authenticated" to the client socket.
 
 ## Parameters
 
 - clientSocket: The user-identifying open socket.
-- message: Message sent from the client with data expected to be used for authentication.
+- message: Message sent from the client with data expected to be used for
+  authentication.
 
 ## Usage:
 
