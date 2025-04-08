@@ -283,10 +283,8 @@ if (hasTypes) {
             del({
                 targets: [
                     "dist/types/src",
-                    "dist/types/tests",
                     "dist/types/helpers/",
                     "dist/types/server",
-                    "dist/types/mockActions",
                 ],
                 recursive: true,
             }),

@@ -25,9 +25,7 @@
     },
     "include": [
         "./src/**/*.ts",
-        "./tests/**/*.ts",
         "./jest.config.mjs",
-        "./rollup.config.mjs",
-        "./mockActions/**/*.ts"
+        "./rollup.config.mjs"
     ]
 }
