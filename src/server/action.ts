@@ -22,14 +22,14 @@ export default abstract class Action {
         this.server = server;
     }
 
-    protected async onCheckPermissions(
+    protected onCheckPermissions(
         _parameters: ActionParameters,
-    ): Promise<void> {}
+    ): Promise<void> | void {}
 
-    protected async onError(
+    protected onError(
         _parameters: ActionParameters,
         err: unknown,
-    ): Promise<void> {
+    ): Promise<void> | void {
         console.error(err);
     }
 

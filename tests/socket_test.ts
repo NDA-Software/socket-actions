@@ -14,14 +14,14 @@ import Socket, {
 
 import Client from "../src/client.ts";
 
-import FailToHitMonster from "../mockActions/failToHitMonster.ts";
-import GetId from "../mockActions/getId.ts";
-import Hello from "../mockActions/hello.ts";
-import HitMonster from "../mockActions/hitMonster.ts";
-import Mistake from "../mockActions/mistake.ts";
-import SetId from "../mockActions/setId.ts";
-import TestCommunication from "../mockActions/testCommunication.ts";
-import TestUserData from "../mockActions/testUserData.ts";
+import FailToHitMonster from "./mockActions/failToHitMonster.ts";
+import GetId from "./mockActions/getId.ts";
+import Hello from "./mockActions/hello.ts";
+import HitMonster from "./mockActions/hitMonster.ts";
+import Mistake from "./mockActions/mistake.ts";
+import SetId from "./mockActions/setId.ts";
+import TestCommunication from "./mockActions/testCommunication.ts";
+import TestUserData from "./mockActions/testUserData.ts";
 
 const actions = {
   failToHitMonster: new FailToHitMonster(),
@@ -77,7 +77,7 @@ Deno.test("Socket Server:", async (t) => {
   await safeSocket.start();
 
   const unsafeSocket = new Socket({
-    actionsPath: "../mockActions/pathTest",
+    actionsPath: "./mockActions/pathTest",
     disableAuthentication: true,
     serverOptions: {
       port: 3001,
@@ -87,7 +87,7 @@ Deno.test("Socket Server:", async (t) => {
   await unsafeSocket.start();
 
   const thirdSocket = new Socket({
-    actionsPath: "../mockActions/pathTest",
+    actionsPath: "./mockActions/pathTest",
     disableAuthentication: true,
     serverOptions: {
       port: 3002,

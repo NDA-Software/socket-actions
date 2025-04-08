@@ -1,5 +1,5 @@
 import Socket, { type onAuth as onAuthType } from "../src/server/socket.ts";
-import ShootLightning from "../mockActions/shootLightning.ts";
+import ShootLightning from "./mockActions/shootLightning.ts";
 import Client from "../src/client.ts";
 import sleep from "../src/helpers/sleep.ts";
 import { assertEquals } from "@std/assert";
