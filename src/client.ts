@@ -127,23 +127,18 @@ export default class Client {
         const { _authentication: authentication } = this;
 
         if (authentication !== undefined) {
-            this._socket?.addEventListener(
-                "message",
-                this.preparedOnAuthResponse,
-            );
-
             this.tryAuth();
 
             return;
         }
 
+        this._isConnected = true;
+        this.enableMessageReceiver();
+
         if (this.onOpen !== undefined) {
             await this.onOpen();
         }
 
-        this.enableMessageReceiver();
-
-        this._isConnected = true;
         this.connectionTries = 0;
     }
 
@@ -174,6 +169,9 @@ export default class Client {
     }
 
     public close(code?: number | undefined, reason?: string | undefined): void {
+        this._isConnected = false;
+        this._isAuthenticated = false;
+
         this.connectionTries = this.connectionTryLimit;
 
         this._socket?.close(code, reason);
@@ -181,6 +179,13 @@ export default class Client {
 
     private enableMessageReceiver(): void {
         this._socket?.addEventListener(
+            "message",
+            this.preparedOnMessageResponse,
+        );
+    }
+
+    private disableMessageReceiver(): void {
+        this._socket?.removeEventListener(
             "message",
             this.preparedOnMessageResponse,
         );
@@ -198,16 +203,16 @@ export default class Client {
 
             this._isAuthenticated = true;
 
-            if (this.onOpen !== undefined) {
-                await this.onOpen();
-            }
-
             this._socket?.removeEventListener(
                 "message",
                 this.preparedOnAuthResponse,
             );
 
             this.enableMessageReceiver();
+
+            if (this.onOpen !== undefined) {
+                await this.onOpen();
+            }
         } catch (err) {
             if (this.onAuthFailure !== undefined) {
                 await this.onAuthFailure(message);
@@ -216,14 +221,22 @@ export default class Client {
     }
 
     private async messageResponse(message: MessageObject): Promise<void> {
-        if (message?.requestId) {
-            const response = this.requests[message.requestId];
+        if (message.data.includes("requestId")) {
+            try {
+                const { requestId, data } = JSON.parse(message.data);
 
-            if (response) {
-                response(message);
+                if (requestId) {
+                    const request = this.requests[requestId];
+
+                    if (request) {
+                        request(data);
+                    }
+
+                    return;
+                }
+            } catch (err) {
+                // Invalid JSON.
             }
-
-            return;
         }
 
         if (this.onMessage !== undefined) {
@@ -258,6 +271,13 @@ export default class Client {
             this._authentication = authentication;
         }
 
+        this.disableMessageReceiver();
+
+        this._socket?.addEventListener(
+            "message",
+            this.preparedOnAuthResponse,
+        );
+
         this._socket?.send(this._authentication);
     }
 
@@ -291,15 +311,18 @@ export default class Client {
         return new Promise((resolve, reject) => {
             let resolved = false;
 
+            let timeoutHolder: number;
+
             this.requests[requestId] = (message: MessageObject): void => {
                 resolved = true;
 
                 delete this.requests[requestId];
+                clearTimeout(timeoutHolder);
 
                 resolve(message);
             };
 
-            setTimeout(() => {
+            timeoutHolder = setTimeout(() => {
                 if (resolved) {
                     return;
                 }
@@ -307,7 +330,7 @@ export default class Client {
                 delete this.requests[requestId];
 
                 reject(new Error("Request timed out."));
-            }, timeout);
+            }, timeout) as unknown as number;
 
             this.sendAction(path, data, {
                 requestId,

@@ -168,6 +168,8 @@ export default class Socket {
                 recursive: true,
             });
 
+            const parsedActionsPath = actionsPath.replace("./", "");
+
             for (let file of actionFiles) {
                 if (file.startsWith("../")) {
                     file = "/" + file;
@@ -180,7 +182,7 @@ export default class Socket {
                 const { default: Action } = await import(fullFilePath);
 
                 let fileName = file
-                    .replace(actionsPath, "")
+                    .replace(parsedActionsPath, "")
                     .replace(".ts", "")
                     .replace(".js", "")
                     .replace("//", "");
@@ -330,12 +332,12 @@ export default class Socket {
 
             await this.onMessage(socket, messageObject);
 
-            const { path, data } = messageObject;
+            const { path, data, requestId } = messageObject;
 
             const parameters = {
                 socket,
                 userData: socket.userData,
-                requestId: messageObject.requestId,
+                requestId,
                 data,
             };
 
