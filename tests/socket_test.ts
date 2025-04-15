@@ -97,302 +97,352 @@ Deno.test("Socket Server:", async (t) => {
   await thirdSocket.start();
 
   await t.step("Testing onConnection...", async () => {
-    clients.push(
-      new Client({
-        onOpen: () => {
-          assertEquals(connectionCounter, 1);
+    await new Promise<void>((resolve, reject) => {
+      const client = new Client({
+        onOpen: async () => {
+          try {
+            assertEquals(connectionCounter, 1);
 
-          clients[0].close();
+            await client.close();
+
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
         },
         connectionTryLimit: 0,
-      }),
-    );
+      });
 
-    await sleep(100);
+      clients.push(client);
+    });
   });
 
   await t.step("Testing onAuth...", async () => {
-    let messageCounter0: number = 0;
+    await Promise.all([
+      new Promise<void>((resolve, reject) => {
+        let messageCounter = 0;
 
-    // Client expected to fail
-    clients.push(
-      new Client({
-        authentication: null,
-        onOpen: () => {
-          clients[1].sendAction("notTrusted");
-        },
-        onAuthResponse: (message) => {
-          switch (messageCounter0) {
-            case 0: // Expected failure of authentication.
-              assertEquals(message.data, "Failed Authentication");
+        const client = new Client({
+          authentication: null,
+          onOpen: () => {
+            client.sendAction("notTrusted");
+          },
+          onAuthResponse: async (message) => {
+            try {
+              switch (messageCounter) {
+                case 0: // Expected failure of authentication.
+                  assertEquals(message.data, "Failed Authentication");
 
-              // Trying to execute an action without authentication.
-              clients[1].sendAction("hello", { name: "World" });
-              break;
+                  // Trying to execute an action without authentication.
+                  client.sendAction("hello", { name: "World" });
+                  break;
+                case 1: // Expected failure of action due to lack of previous authentication.
+                  assertEquals(message.data, "Failed Authentication");
 
-            case 1: // Expected failure of action due to lack of previous authentication.
-              assertEquals(message.data, "Failed Authentication");
-
-              clients[1].close();
-              break;
-          }
-
-          messageCounter0++;
-        },
-        connectionTryLimit: 0,
-      }),
-    );
-
-    // Client expected to succeed
-    let messageCounter1: number = 0;
-    clients.push(
-      new Client({
-        onAuthResponse: (message: { data: string }) => {
-          assertEquals(message.data, "Authenticated");
-
-          clients[2].sendAction("hello", { name: "World" });
-        },
-        onMessage: (message: { data: string }) => {
-          switch (messageCounter1) {
-            case 0: { // Expect action to be executed.
-              const { data } = JSON.parse(message.data as string);
-
-              assertEquals(data.message, "Hello World!");
-
-              clients[2].sendAction("getId");
-              break;
+                  await client.close();
+                  resolve();
+                  break;
+              }
+              messageCounter++;
+            } catch (err) {
+              reject(err);
             }
+          },
+          connectionTryLimit: 0,
+        });
 
-            case 1: {
-              const { data } = JSON.parse(message.data as string);
-
-              assertEquals(uuidValidate(data.id as string), true);
-
-              clients[2].close();
-              break;
-            }
-          }
-
-          messageCounter1++;
-        },
-        authentication: "trustMe!",
-        connectionTryLimit: 0,
+        clients.push(client);
       }),
-    );
+      new Promise<void>((resolve, reject) => {
+        let messageCounter = 0;
 
-    await sleep(100);
+        const client = new Client({
+          authentication: "trustMe!",
+          onAuthResponse: (message) => {
+            try {
+              assertEquals(message.data, "Authenticated");
+
+              client.sendAction("hello", { name: "World" });
+            } catch (err) {
+              reject(err);
+            }
+          },
+          onMessage: async (message) => {
+            try {
+              switch (messageCounter) {
+                case 0: { // Expect action to be executed.
+                  const { data } = JSON.parse(message.data as string);
+
+                  assertEquals(data.message, "Hello World!");
+
+                  client.sendAction("getId");
+                  break;
+                }
+                case 1: {
+                  const { data } = JSON.parse(message.data as string);
+                  assertEquals(uuidValidate(data.id as string), true);
+
+                  await client.close();
+
+                  resolve();
+                }
+              }
+              messageCounter++;
+            } catch (err) {
+              reject(err);
+            }
+          },
+          connectionTryLimit: 0,
+        });
+
+        clients.push(client);
+      }),
+    ]);
   });
 
   await t.step("Testing onMessage...", async () => {
-    let messageCounter: number = 0;
+    await new Promise<void>((resolve, reject) => {
+      let messageCounter = 0;
 
-    clients.push(
-      new Client({
+      const client = new Client({
+        authentication: "trustMe!",
         onOpen: () => {
-          clients[3].sendAction("hitMonster");
+          client.sendAction("hitMonster");
         },
-        onMessage: (message) => {
-          switch (messageCounter) {
-            case 0: { // Expect for attack to have failed.
-              const { data } = JSON.parse(message.data as string);
+        onMessage: async (message) => {
+          try {
+            switch (messageCounter) {
+              case 0: { // Expect for attack to have failed.
+                const { data } = JSON.parse(message.data as string);
 
-              assertEquals(
-                data.message,
-                "You missed! Please wait for the bald guy's help.",
-              );
+                assertEquals(
+                  data.message,
+                  "You missed! Please wait for the bald guy's help.",
+                );
 
-              clients[3].sendAction("hitMonster");
-              break;
+                client.sendAction("hitMonster");
+                break;
+              }
+
+              case 1: { // Expect action to be executed.
+                const { data } = JSON.parse(message.data as string);
+
+                assertEquals(data.message, "ONE PUNCH!");
+
+                await client.close();
+                resolve();
+                break;
+              }
             }
 
-            case 1: { // Expect action to be executed.
-              const { data } = JSON.parse(message.data as string);
-
-              assertEquals(data.message, "ONE PUNCH!");
-
-              clients[3].close();
-              break;
-            }
+            messageCounter++;
+          } catch (err) {
+            reject(err);
           }
-
-          messageCounter++;
         },
         connectionTryLimit: 0,
-        authentication: "trustMe!",
-      }),
-    );
+      });
 
-    await sleep(100);
+      clients.push(client);
+    });
   });
 
   await t.step("Testing onError...", async () => {
-    clients.push(
-      new Client({
+    await new Promise<void>((resolve, reject) => {
+      const client = new Client({
         authentication: "trustMe!",
         onOpen: () => {
-          clients[4].sendAction("mistake");
+          client.sendAction("mistake");
         },
-        onMessage: (message) => {
-          assertEquals(message.data, "You were defeated.");
+        onMessage: async (message) => {
+          try {
+            assertEquals(message.data, "You were defeated.");
 
-          clients[4].close();
+            await client.close();
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
         },
-      }),
-    );
+      });
 
-    await sleep(100);
+      clients.push(client);
+    });
   });
 
   await t.step("Testing onClose...", async () => {
     // This assumes that the onClose function is called when the client closes the connection.
     // If the onClose function is not called, the connectionCounter will not be decremented.
 
-    await sleep(100);
+    await sleep(1);
 
     assertEquals(connectionCounter, 0);
   });
 
   await t.step("Testing unsafe socket and actionsPath...", async () => {
-    clients.push(
-      new Client({
+    await new Promise<void>((resolve, reject) => {
+      const client = new Client({
         url: "ws://localhost:3001",
-        onOpen: () => clients[5].sendAction("hello"),
+        onOpen: () => {
+          client.sendAction("hello");
+        },
         onMessage: (message) => {
-          const { data } = JSON.parse(message.data as string);
+          try {
+            const { data } = JSON.parse(message.data as string);
 
-          assertEquals(data.message, "Hello from dynamic import!");
+            assertEquals(data.message, "Hello from dynamic import!");
 
-          clients[5].close();
+            client.close();
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
         },
         connectionTryLimit: 0,
-      }),
-    );
+      });
 
-    await sleep(100);
+      clients.push(client);
+    });
   });
 
   await t.step(
     "Testing messaging between clients through actions...",
     async () => {
-      let con1Counter = 0;
-      clients.push(
-        new Client({
-          authentication: "trustMe!",
-          onOpen: () => {
-            clients[6].sendAction("setId", {
-              id: 1,
-            });
-          },
-          onMessage: (message) => {
-            switch (con1Counter) {
-              case 0: {
-                const { data } = JSON.parse(message.data as string);
+      await Promise.all([
+        new Promise<void>((resolve, reject) => {
+          let messageCounter = 0;
 
-                assertEquals(data.message, "Ok");
+          const client = new Client({
+            authentication: "trustMe!",
+            onOpen: () => {
+              client.sendAction("setId", {
+                id: 1,
+              });
+            },
+            onMessage: (message) => {
+              try {
+                switch (messageCounter) {
+                  case 0: {
+                    const { data } = JSON.parse(message.data as string);
 
-                clients[6].sendAction("testCommunication", {
-                  toId: 2,
-                  message: "Hi!",
-                });
-                break;
+                    assertEquals(data.message, "Ok");
+
+                    client.sendAction("testCommunication", {
+                      toId: 2,
+                      message: "Hi!",
+                    });
+                    break;
+                  }
+
+                  case 1:
+                    assertEquals(
+                      message.data,
+                      "Hello!",
+                    );
+
+                    client.close();
+                    resolve();
+                    break;
+                }
+
+                messageCounter++;
+              } catch (err) {
+                reject(err);
               }
+            },
+          });
 
-              case 1:
-                assertEquals(
-                  message.data,
-                  "Hello!",
-                );
-
-                clients[6].close();
-                break;
-            }
-
-            con1Counter++;
-          },
+          clients.push(client);
         }),
-      );
+        new Promise<void>((resolve, reject) => {
+          let messageCounter = 0;
 
-      let con2Counter = 0;
-      clients.push(
-        new Client({
-          authentication: "trustMe!",
-          onOpen: () => {
-            clients[7].sendAction("setId", {
-              id: 2,
-            });
-          },
-          onMessage: (message) => {
-            switch (con2Counter) {
-              case 0: {
-                const { data } = JSON.parse(message.data as string);
-                assertEquals(data.message, "Ok");
-                break;
+          const client = new Client({
+            authentication: "trustMe!",
+            onOpen: () => {
+              client.sendAction("setId", {
+                id: 2,
+              });
+            },
+            onMessage: (message) => {
+              try {
+                switch (messageCounter) {
+                  case 0: {
+                    const { data } = JSON.parse(message.data as string);
+                    assertEquals(data.message, "Ok");
+                    break;
+                  }
+
+                  case 1: {
+                    assertEquals(message.data, "Hi!");
+
+                    client.sendAction("testCommunication", {
+                      toId: 1,
+                      message: "Hello!",
+                    });
+
+                    client.sendAction("testUserData");
+                    break;
+                  }
+
+                  case 2: {
+                    const { data } = JSON.parse(message.data as string);
+
+                    assertEquals(data.message, "User Id: 2");
+
+                    client.close();
+                    resolve();
+                    break;
+                  }
+                }
+
+                messageCounter++;
+              } catch (err) {
+                reject(err);
               }
+            },
+          });
 
-              case 1: {
-                assertEquals(message.data, "Hi!");
-
-                clients[6].sendAction("testCommunication", {
-                  toId: 1,
-                  message: "Hello!",
-                });
-
-                clients[7].sendAction("testUserData");
-                break;
-              }
-
-              case 2: {
-                const { data } = JSON.parse(message.data as string);
-
-                assertEquals(data.message, "User Id: 2");
-
-                clients[7].close();
-                break;
-              }
-            }
-
-            con2Counter++;
-          },
+          clients.push(client);
         }),
-      );
-
-      await sleep(100);
+      ]);
     },
   );
 
   await t.step("Testing restart...", async () => {
     let bothConnected = false;
 
-    clients.push(
-      new Client({
+    await new Promise<void>((resolve) => {
+      const client = new Client({
         url: "ws://localhost:3002",
         onOpen: async () => {
-          clients[8].close();
-
           await thirdSocket?.restart();
 
-          clients.push(
-            new Client({
-              url: "ws://localhost:3002",
-              onOpen: () => {
-                bothConnected = true;
+          const newClient = new Client({
+            url: "ws://localhost:3002",
+            onOpen: () => {
+              bothConnected = true;
 
-                clients[9].close();
-              },
-              connectionTryLimit: 0,
-            }),
+              newClient.close();
+              resolve();
+            },
+            connectionTryLimit: 0,
+          });
+
+          clients.push(
+            newClient,
           );
+
+          client.close();
         },
         connectionTryLimit: 0,
-      }),
-    );
+      });
 
-    await sleep(100);
+      clients.push(client);
+    });
 
     assertEquals(bothConnected, true);
   });
-
-  await sleep(1000);
 
   outerLoop: while (true) {
     for (const client of clients) {
