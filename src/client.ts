@@ -1,7 +1,7 @@
-import { createHash } from "crypto";
 import listenerFactory, {
     type FactoryFunction,
 } from "./helpers/listenerFactory";
+import randomHash from "./helpers/randomHash";
 
 export type MessageObject = MessageEvent & {
     requestId?: string;
@@ -305,8 +305,7 @@ export default class Client {
         data?: Record<string, any>,
         timeout = 5000,
     ): Promise<Record<string, any>> {
-        const requestId = createHash("md5").update(Date.now().toString())
-            .digest("hex");
+        const requestId = randomHash();
 
         return new Promise((resolve, reject) => {
             let resolved = false;
