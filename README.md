@@ -43,10 +43,6 @@ run with an object oriented structure to allow routing of WebSocket messages.
   - userData (DataType): User-specific data.
   - data (DataType): Data sent from user.
 
-## Example:
-
-- [Checklist](https://github.com/NDA-Software/socket-actions-checklist)
-
 ## Roadmap:
 
 - 2.2.0:
